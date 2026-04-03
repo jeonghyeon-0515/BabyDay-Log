@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../bootstrap.dart';
 import '../data/baby_repository.dart';
 import '../domain/baby_summary.dart';
+import 'baby_list_page.dart';
 
 class BabyStatusCard extends StatefulWidget {
   const BabyStatusCard({super.key, required this.bootstrapState});
@@ -77,9 +78,26 @@ class _BabyStatusCardState extends State<BabyStatusCard> {
             _BabyRow(label: '생년월일', value: primaryBaby?.birthDate ?? '없음'),
             _BabyRow(label: '성별', value: primaryBaby?.sex ?? '없음'),
             const SizedBox(height: 12),
-            FilledButton.tonal(
-              onPressed: canUseBabies && !_isLoading ? _loadBabies : null,
-              child: Text(_isLoading ? '조회 중...' : '아기 다시 조회'),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FilledButton.tonal(
+                  onPressed: canUseBabies && !_isLoading ? _loadBabies : null,
+                  child: Text(_isLoading ? '조회 중...' : '아기 다시 조회'),
+                ),
+                OutlinedButton(
+                  onPressed: canUseBabies && _repository != null
+                      ? () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                BabyListPage(repository: _repository!),
+                          ),
+                        )
+                      : null,
+                  child: const Text('상세 보기'),
+                ),
+              ],
             ),
             if (_message != null) ...[
               const SizedBox(height: 12),
