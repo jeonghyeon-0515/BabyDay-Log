@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../bootstrap.dart';
 import '../data/profile_repository.dart';
 import '../domain/user_profile.dart';
+import 'profile_edit_page.dart';
 
 class ProfileStatusCard extends StatefulWidget {
   const ProfileStatusCard({super.key, required this.bootstrapState});
@@ -84,6 +85,17 @@ class _ProfileStatusCardState extends State<ProfileStatusCard> {
                 FilledButton.tonal(
                   onPressed: canUseProfile && !_isLoading ? _loadProfile : null,
                   child: Text(_isLoading ? '조회 중...' : '프로필 다시 조회'),
+                ),
+                OutlinedButton(
+                  onPressed: canUseProfile && _repository != null
+                      ? () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                ProfileEditPage(repository: _repository!),
+                          ),
+                        )
+                      : null,
+                  child: const Text('프로필 설정'),
                 ),
               ],
             ),
