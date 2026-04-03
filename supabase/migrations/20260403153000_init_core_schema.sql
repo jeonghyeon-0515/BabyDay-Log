@@ -85,77 +85,6 @@ begin
 end;
 $$;
 
-create or replace function public.is_household_member(target_household_id uuid)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1
-    from public.household_memberships hm
-    where hm.household_id = target_household_id
-      and hm.user_id = auth.uid()
-      and hm.status = 'active'
-  );
-$$;
-
-create or replace function public.has_household_role(
-  target_household_id uuid,
-  allowed_roles public.membership_role[]
-)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1
-    from public.household_memberships hm
-    where hm.household_id = target_household_id
-      and hm.user_id = auth.uid()
-      and hm.status = 'active'
-      and hm.role = any (allowed_roles)
-  );
-$$;
-
-create or replace function public.handle_household_created()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  insert into public.household_memberships (
-    id,
-    household_id,
-    user_id,
-    role,
-    status,
-    invited_by_user_id,
-    joined_at,
-    created_at,
-    updated_at
-  )
-  values (
-    gen_random_uuid(),
-    new.id,
-    new.created_by_user_id,
-    'owner',
-    'active',
-    new.created_by_user_id,
-    timezone('utc', now()),
-    timezone('utc', now()),
-    timezone('utc', now())
-  )
-  on conflict (household_id, user_id) do nothing;
-
-  return new;
-end;
-$$;
-
 -- =========================================================
 -- TABLES
 -- =========================================================
@@ -494,6 +423,81 @@ create table if not exists public.audit_logs (
   created_at timestamptz not null default timezone('utc', now())
 );
 create index if not exists idx_audit_logs_household_created_at on public.audit_logs(household_id, created_at desc);
+
+-- =========================================================
+-- HOUSEHOLD / ROLE FUNCTIONS (require tables above)
+-- =========================================================
+
+create or replace function public.is_household_member(target_household_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.household_memberships hm
+    where hm.household_id = target_household_id
+      and hm.user_id = auth.uid()
+      and hm.status = 'active'
+  );
+$$;
+
+create or replace function public.has_household_role(
+  target_household_id uuid,
+  allowed_roles public.membership_role[]
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.household_memberships hm
+    where hm.household_id = target_household_id
+      and hm.user_id = auth.uid()
+      and hm.status = 'active'
+      and hm.role = any (allowed_roles)
+  );
+$$;
+
+create or replace function public.handle_household_created()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.household_memberships (
+    id,
+    household_id,
+    user_id,
+    role,
+    status,
+    invited_by_user_id,
+    joined_at,
+    created_at,
+    updated_at
+  )
+  values (
+    gen_random_uuid(),
+    new.id,
+    new.created_by_user_id,
+    'owner',
+    'active',
+    new.created_by_user_id,
+    timezone('utc', now()),
+    timezone('utc', now()),
+    timezone('utc', now())
+  )
+  on conflict (household_id, user_id) do nothing;
+
+  return new;
+end;
+$$;
 
 -- =========================================================
 -- UPDATED_AT TRIGGERS
