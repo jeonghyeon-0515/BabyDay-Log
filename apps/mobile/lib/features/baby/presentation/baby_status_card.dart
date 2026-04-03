@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../bootstrap.dart';
 import '../data/baby_repository.dart';
 import '../domain/baby_summary.dart';
+import 'baby_create_page.dart';
 import 'baby_list_page.dart';
 
 class BabyStatusCard extends StatefulWidget {
@@ -96,6 +97,17 @@ class _BabyStatusCardState extends State<BabyStatusCard> {
                         )
                       : null,
                   child: const Text('상세 보기'),
+                ),
+                OutlinedButton(
+                  onPressed: canUseBabies && _repository != null
+                      ? () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                BabyCreatePage(repository: _repository!),
+                          ),
+                        )
+                      : null,
+                  child: const Text('아기 생성'),
                 ),
               ],
             ),
