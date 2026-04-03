@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../bootstrap.dart';
 import '../data/activity_repository.dart';
 import '../domain/activity_event_summary.dart';
+import 'activity_list_page.dart';
 
 class ActivityStatusCard extends StatefulWidget {
   const ActivityStatusCard({super.key, required this.bootstrapState});
@@ -83,9 +84,26 @@ class _ActivityStatusCardState extends State<ActivityStatusCard> {
               value: latestEvent?.recordedAt ?? '없음',
             ),
             const SizedBox(height: 12),
-            FilledButton.tonal(
-              onPressed: canUseActivity && !_isLoading ? _loadEvents : null,
-              child: Text(_isLoading ? '조회 중...' : 'activity 다시 조회'),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FilledButton.tonal(
+                  onPressed: canUseActivity && !_isLoading ? _loadEvents : null,
+                  child: Text(_isLoading ? '조회 중...' : 'activity 다시 조회'),
+                ),
+                OutlinedButton(
+                  onPressed: canUseActivity && _repository != null
+                      ? () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                ActivityListPage(repository: _repository!),
+                          ),
+                        )
+                      : null,
+                  child: const Text('상세 보기'),
+                ),
+              ],
             ),
             if (_message != null) ...[
               const SizedBox(height: 12),
