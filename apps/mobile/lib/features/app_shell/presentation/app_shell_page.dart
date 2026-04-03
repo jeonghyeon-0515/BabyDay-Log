@@ -23,7 +23,7 @@ class _AppShellPageState extends State<AppShellPage> {
   Widget build(BuildContext context) {
     final pages = <Widget>[
       HomeScreen(bootstrapState: widget.bootstrapState),
-      const RecordsPage(),
+      RecordsPage(bootstrapState: widget.bootstrapState),
       const AnalyticsPage(),
       const DiaryPage(),
       MorePage(bootstrapState: widget.bootstrapState),

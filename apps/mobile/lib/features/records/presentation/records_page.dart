@@ -1,31 +1,150 @@
 import 'package:flutter/material.dart';
 
-class RecordsPage extends StatelessWidget {
-  const RecordsPage({super.key});
+import '../../../bootstrap.dart';
+import '../../activity/data/activity_repository.dart';
+import '../../activity/domain/activity_event_summary.dart';
+import '../../activity/presentation/activity_create_page.dart';
+import '../../activity/presentation/activity_list_page.dart';
+
+class RecordsPage extends StatefulWidget {
+  const RecordsPage({super.key, required this.bootstrapState});
+
+  final BootstrapState bootstrapState;
 
   @override
-  Widget build(BuildContext context) {
-    return const _PlaceholderScaffold(
-      title: '기록',
-      description: '기록 타임라인과 빠른 입력 바텀시트를 다음 단계에서 연결합니다.',
-    );
-  }
+  State<RecordsPage> createState() => _RecordsPageState();
 }
 
-class _PlaceholderScaffold extends StatelessWidget {
-  const _PlaceholderScaffold({required this.title, required this.description});
+class _RecordsPageState extends State<RecordsPage> {
+  ActivityRepository? _repository;
+  List<ActivityEventSummary> _events = const [];
+  String? _message;
+  bool _isLoading = false;
 
-  final String title;
-  final String description;
+  @override
+  void initState() {
+    super.initState();
+    if (widget.bootstrapState.supabaseInitialized) {
+      _repository = ActivityRepository();
+      _loadEvents();
+    }
+  }
+
+  Future<void> _loadEvents() async {
+    final repository = _repository;
+    if (repository == null) return;
+
+    setState(() {
+      _isLoading = true;
+      _message = null;
+    });
+
+    try {
+      final events = await repository.fetchRecentActivityEvents(limit: 20);
+      if (!mounted) return;
+      setState(() {
+        _events = events;
+        _message = events.isEmpty ? '기록된 activity event가 없습니다.' : null;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _message = '기록 탭 조회 실패: $error';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final canUseRecords = widget.bootstrapState.supabaseInitialized;
+    final repository = _repository;
+
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(description, textAlign: TextAlign.center),
+      appBar: AppBar(title: const Text('기록')),
+      body: RefreshIndicator(
+        onRefresh: _loadEvents,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Text('최근 기록', style: theme.textTheme.headlineSmall),
+            const SizedBox(height: 8),
+            Text(
+              'activity 도메인을 기록 탭에 실제 연결한 첫 단계입니다.',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FilledButton.tonal(
+                  onPressed: canUseRecords && !_isLoading ? _loadEvents : null,
+                  child: Text(_isLoading ? '조회 중...' : '기록 새로고침'),
+                ),
+                OutlinedButton(
+                  onPressed: canUseRecords && repository != null
+                      ? () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                ActivityCreatePage(repository: repository),
+                          ),
+                        )
+                      : null,
+                  child: const Text('기록 추가'),
+                ),
+                OutlinedButton(
+                  onPressed: canUseRecords && repository != null
+                      ? () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                ActivityListPage(repository: repository),
+                          ),
+                        )
+                      : null,
+                  child: const Text('전체 보기'),
+                ),
+              ],
+            ),
+            if (_message != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                _message!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+            if (!canUseRecords) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Supabase 초기화 후 기록 탭을 사용할 수 있습니다.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            for (final event in _events) ...[
+              Card(
+                child: ListTile(
+                  title: Text(event.eventTypeSlug),
+                  subtitle: Text(
+                    'status: ${event.status}\n'
+                    'recordedAt: ${event.recordedAt}\n'
+                    'babyId: ${event.babyId}',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ],
         ),
       ),
     );
