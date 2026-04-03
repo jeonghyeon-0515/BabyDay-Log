@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../bootstrap.dart';
 import '../data/household_repository.dart';
 import '../domain/household_summary.dart';
+import 'household_list_page.dart';
 
 class HouseholdStatusCard extends StatefulWidget {
   const HouseholdStatusCard({super.key, required this.bootstrapState});
@@ -93,6 +94,17 @@ class _HouseholdStatusCardState extends State<HouseholdStatusCard> {
                       ? _loadHouseholds
                       : null,
                   child: Text(_isLoading ? '조회 중...' : 'household 다시 조회'),
+                ),
+                OutlinedButton(
+                  onPressed: canUseHousehold && _repository != null
+                      ? () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                HouseholdListPage(repository: _repository!),
+                          ),
+                        )
+                      : null,
+                  child: const Text('상세 보기'),
                 ),
               ],
             ),
