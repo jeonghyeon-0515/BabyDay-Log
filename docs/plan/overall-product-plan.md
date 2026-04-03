@@ -3,6 +3,8 @@
 작성일: 2026-04-03  
 상태: Draft v1
 기술 스택 전제: **Flutter + Supabase**
+인증 우선순위: **카카오 → 네이버 → 구글**
+성장 기준: **한국 기준(`kr_2017`)**
 
 ## 1. 제품 목표
 BabyDay-Log의 1차 목표는 BabyTime의 핵심 경험을 재현하는 것이다.
@@ -55,6 +57,8 @@ BabyDay-Log의 1차 목표는 BabyTime의 핵심 경험을 재현하는 것이�
 - 기능 동등성 범위 확정
 - 핵심 도메인 구조 확정
 - 권한/공개 범위 규칙 확정
+- 로그인 공급자 전략 확정
+- 성장 백분위 기준 확정
 
 ### 산출물
 - 기능 벤치마크 문서
@@ -151,7 +155,7 @@ BabyDay-Log의 1차 목표는 BabyTime의 핵심 경험을 재현하는 것이�
 - 비공개 성장일기
 - 사진 포함 일기
 - 공개 전환
-- 공개 피드 탐색
+- **공개 일기/커뮤니티(v1 포함)**
 - 신고/차단/운영 정책
 
 ### 완료 기준
@@ -223,13 +227,18 @@ BabyDay-Log의 1차 목표는 BabyTime의 핵심 경험을 재현하는 것이�
 ## 10. 다음 실행 우선순위
 1. IA 확정
 2. 사용자 플로우 확정
-3. 데이터 모델 확정
-4. Supabase 아키텍처 확정
-5. Flutter 부트스트랩
+3. ERD 확정
+4. 이벤트 스키마 확정
+5. Supabase 아키텍처 확정
+6. Flutter 부트스트랩
 
 ## 11. 참고 문서
 - `docs/research/babytime-feature-benchmark.md`
 - `docs/plan/information-architecture.md`
 - `docs/plan/user-flows.md`
 - `docs/architecture/supabase-architecture.md`
+- `docs/architecture/auth-provider-strategy.md`
+- `docs/architecture/erd.md`
+- `docs/architecture/event-schema.md`
 - `docs/architecture/backend-server-decision.md`
+- `docs/research/korean-growth-standard.md`

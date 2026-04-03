@@ -59,6 +59,17 @@
 - 공개 일기 후처리/모더레이션 훅
 - 과금/영수증 검증
 
+## 2.1 인증 제공자 전략
+- 우선순위는 **카카오 → 네이버 → 구글**로 진행한다.
+- 카카오는 우선 적용 대상이다.
+- 네이버는 Supabase 커스텀 OIDC/SSO 구성을 우선 검토한다.
+- 구글은 Supabase 기본 소셜 로그인 provider로 후순위 적용한다.
+
+## 2.2 성장 기준 전략
+- 기본 성장 백분위 기준은 **한국 기준 `kr_2017`** 으로 둔다.
+- household 설정에 `growth_chart_standard`를 두고, 기본값은 `kr_2017`로 관리한다.
+- 계산에 사용한 기준표 버전은 `growth_entries.percentile_source`로 추적 가능하게 한다.
+
 ## 3. 권장 시스템 구성
 
 ```text
@@ -88,9 +99,10 @@ Flutter App
 
 ## 4.1 핵심 테이블
 - `profiles`
+- `households`
+- `household_memberships`
+- `caregiver_invites`
 - `babies`
-- `caregiver_memberships`
-- `invite_codes`
 - `activity_events`
 - `activity_attachments`
 - `growth_entries`
@@ -99,12 +111,13 @@ Flutter App
 - `community_posts`
 - `reminder_rules`
 - `notification_logs`
-- `devices`
+- `device_installations`
 - `audit_logs`
 
 ## 4.2 관계 개요
-- user 1:N babies (직접 소유 기준)
-- baby N:M users (`caregiver_memberships`로 연결)
+- user 1:N household_memberships
+- household 1:N babies
+- household 1:N caregiver_invites
 - baby 1:N activity_events
 - baby 1:N growth_entries
 - baby 1:N diary_entries
@@ -246,6 +259,12 @@ Flutter App
 - 고급 관리자/운영 API
 
 그 판단은 `docs/architecture/backend-server-decision.md`에서 상세히 다룬다.
+
+## 14. 상세 설계로 연결되는 문서
+- `docs/architecture/auth-provider-strategy.md`
+- `docs/architecture/erd.md`
+- `docs/architecture/event-schema.md`
+- `docs/research/korean-growth-standard.md`
 
 ## 14. 참고 출처
 - Supabase Flutter Quickstart: https://supabase.com/docs/guides/getting-started/quickstarts/flutter
