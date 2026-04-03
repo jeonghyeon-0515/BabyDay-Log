@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../bootstrap.dart';
 import '../data/household_repository.dart';
 import '../domain/household_summary.dart';
+import 'household_create_page.dart';
 import 'household_list_page.dart';
 
 class HouseholdStatusCard extends StatefulWidget {
@@ -105,6 +106,17 @@ class _HouseholdStatusCardState extends State<HouseholdStatusCard> {
                         )
                       : null,
                   child: const Text('상세 보기'),
+                ),
+                OutlinedButton(
+                  onPressed: canUseHousehold && _repository != null
+                      ? () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                HouseholdCreatePage(repository: _repository!),
+                          ),
+                        )
+                      : null,
+                  child: const Text('Household 생성'),
                 ),
               ],
             ),

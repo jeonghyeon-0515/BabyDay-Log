@@ -10,6 +10,26 @@ class HouseholdRepository {
 
   User? get currentUser => _client.auth.currentUser;
 
+  Future<void> createHousehold({
+    required String name,
+    String locale = 'ko',
+    String timezone = 'Asia/Seoul',
+    String growthChartStandard = 'kr_2017',
+  }) async {
+    final user = currentUser;
+    if (user == null) {
+      throw StateError('로그인된 사용자가 없습니다.');
+    }
+
+    await _client.from('households').insert({
+      'name': name,
+      'locale': locale,
+      'timezone': timezone,
+      'growth_chart_standard': growthChartStandard,
+      'created_by_user_id': user.id,
+    });
+  }
+
   Future<List<HouseholdSummary>> fetchMyHouseholds() async {
     final user = currentUser;
     if (user == null) return const [];
