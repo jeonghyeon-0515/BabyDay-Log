@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../bootstrap.dart';
 import '../../auth/presentation/auth_status_card.dart';
 import '../../profile/presentation/profile_status_card.dart';
+import '../../household/presentation/household_status_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, required this.bootstrapState});
@@ -78,6 +79,8 @@ class HomeScreen extends StatelessWidget {
           AuthStatusCard(bootstrapState: bootstrapState),
           const SizedBox(height: 12),
           ProfileStatusCard(bootstrapState: bootstrapState),
+          const SizedBox(height: 12),
+          HouseholdStatusCard(bootstrapState: bootstrapState),
           const SizedBox(height: 12),
           const _InfoCard(
             title: '다음 작업 예정',
