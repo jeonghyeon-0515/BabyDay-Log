@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../bootstrap.dart';
-import '../features/home/presentation/home_screen.dart';
+import '../features/app_shell/presentation/app_shell_page.dart';
 
 class BabyDayLogApp extends StatelessWidget {
   const BabyDayLogApp({super.key, required this.bootstrapState});
@@ -17,7 +17,7 @@ class BabyDayLogApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF7A5AF8)),
         useMaterial3: true,
       ),
-      home: HomeScreen(bootstrapState: bootstrapState),
+      home: AppShellPage(bootstrapState: bootstrapState),
     );
   }
 }
