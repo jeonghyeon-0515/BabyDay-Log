@@ -7,6 +7,16 @@
 .buildlog/
 .history
 .omx/
+.env
+.env.*
+!.env.example
+config/env/*.json
+!config/env/*.example.json
+supabase/.env
+supabase/.env.*
+!supabase/.env.example
+supabase/.branches/
+supabase/.temp/
 
 
 

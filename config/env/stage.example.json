@@ -1,0 +1,6 @@
+{
+  "APP_ENV": "stage",
+  "SUPABASE_URL": "https://YOUR_STAGE_PROJECT.supabase.co",
+  "SUPABASE_ANON_KEY": "REPLACE_ME",
+  "SUPABASE_PROJECT_REF": "YOUR_STAGE_PROJECT_REF"
+}

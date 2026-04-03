@@ -9,6 +9,9 @@
   - BabyTime 공식 기능 분석
   - 기능 동등성 범위 정의
   - 우선순위 분류(P0/P1/P2)
+- `docs/research/korean-growth-standard.md`
+  - 한국 성장 백분위 기준 검토
+  - 기본 기준값 `kr_2017` 결정
 
 ### 제품 계획
 - `docs/plan/overall-product-plan.md`
@@ -30,6 +33,17 @@
   - Flutter + Supabase 기반 구조 설계
   - 도메인 모델 초안
   - Realtime / Storage / RLS / Edge Functions 역할 정의
+- `docs/architecture/supabase-project-setup.md`
+  - 현재 Supabase 프로젝트 적용 가이드
+  - 비밀키 관리 원칙과 로컬 준비 항목
+- `docs/architecture/auth-provider-strategy.md`
+  - 카카오 / 네이버 / 구글 로그인 우선순위 및 구현 전략
+- `docs/architecture/erd.md`
+  - household / baby / activity / diary 중심 ERD 상세 정의
+  - 핵심 테이블, 관계, enum/lookup 전략
+- `docs/architecture/event-schema.md`
+  - activity_events 및 세부 이벤트 타입 스키마 정의
+  - 타임라인/집계/동기화 관점 설계
 - `docs/architecture/backend-server-decision.md`
   - 별도 백엔드 서버 필요성 검토
   - 추천 방향 및 재검토 조건
@@ -39,3 +53,7 @@
 - `.omx/plans/test-spec-babytime-clone-20260403.md`
 
 위 2개는 에이전트 계획 워크플로 산출물이고, `docs/`는 팀 협업용 정리 문서입니다.
+
+## 실행용 SQL 초안
+- `supabase/migrations/20260403153000_init_core_schema.sql`
+  - Supabase 초기 스키마 / RLS / 기본 seed SQL 초안
