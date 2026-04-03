@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../bootstrap.dart';
 import '../data/activity_repository.dart';
 import '../domain/activity_event_summary.dart';
+import 'activity_create_page.dart';
 import 'activity_list_page.dart';
 
 class ActivityStatusCard extends StatefulWidget {
@@ -102,6 +103,17 @@ class _ActivityStatusCardState extends State<ActivityStatusCard> {
                         )
                       : null,
                   child: const Text('상세 보기'),
+                ),
+                OutlinedButton(
+                  onPressed: canUseActivity && _repository != null
+                      ? () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                ActivityCreatePage(repository: _repository!),
+                          ),
+                        )
+                      : null,
+                  child: const Text('Activity 생성'),
                 ),
               ],
             ),
