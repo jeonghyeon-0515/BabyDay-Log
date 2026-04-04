@@ -17,34 +17,73 @@ class BabyContextHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final hasBaby = selectedBaby != null;
 
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Text('현재 아기', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Text(selectedBaby?.name ?? '선택된 아기 없음'),
-            const SizedBox(height: 4),
-            Text(
-              selectedBaby == null
-                  ? '아기가 아직 없습니다.'
-                  : '생년월일: ${selectedBaby!.birthDate} · 성별: ${selectedBaby!.sex}',
-              style: theme.textTheme.bodySmall,
+            CircleAvatar(
+              radius: 22,
+              backgroundColor: colors.primaryContainer,
+              foregroundColor: colors.primary,
+              child: Text(
+                hasBaby ? selectedBaby!.name.substring(0, 1) : '•',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
-            const SizedBox(height: 12),
-            FilledButton.tonal(
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    hasBaby ? selectedBaby!.name : '아기를 등록해 주세요',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    hasBaby
+                        ? '${selectedBaby!.birthDate} · ${_sexLabel(selectedBaby!.sex)}'
+                        : '등록 후 기록과 분석을 시작할 수 있어요.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            FilledButton.tonalIcon(
               onPressed: availableBabies.isEmpty
                   ? null
                   : () => _showSelector(context),
-              child: const Text('아기 선택'),
+              icon: const Icon(Icons.keyboard_arrow_down_rounded),
+              label: const Text('바꾸기'),
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _sexLabel(String sex) {
+    switch (sex) {
+      case 'male':
+        return '남아';
+      case 'female':
+        return '여아';
+      case 'other':
+        return '기타';
+      default:
+        return '미정';
+    }
   }
 
   Future<void> _showSelector(BuildContext context) async {

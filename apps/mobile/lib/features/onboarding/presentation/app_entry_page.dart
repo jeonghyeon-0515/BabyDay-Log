@@ -125,7 +125,7 @@ class _AppEntryPageState extends State<AppEntryPage> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _message = '초기 진입 상태 판별 실패: $error';
+        _message = '상태를 불러오지 못했어요. 다시 시도해 주세요.';
         _stage = AppEntryStage.unauthenticated;
       });
     }
@@ -145,13 +145,13 @@ class _AppEntryPageState extends State<AppEntryPage> {
       if (!mounted) return;
       setState(() {
         _message = launched
-            ? '${provider.shortLabel} 로그인 브라우저를 열었습니다.'
-            : '${provider.shortLabel} 로그인 브라우저를 열지 못했습니다.';
+            ? '브라우저에서 ${provider.shortLabel} 로그인을 진행해 주세요.'
+            : '${provider.shortLabel} 로그인을 열지 못했어요.';
       });
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _message = '$error';
+        _message = '로그인을 시작하지 못했어요.';
       });
     } finally {
       if (mounted) {
@@ -197,59 +197,82 @@ class _AppEntryPageState extends State<AppEntryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final setupSteps = [
+      _SetupStep(label: '로그인', done: _stage.index > AppEntryStage.unauthenticated.index),
+      _SetupStep(label: '프로필', done: _stage.index > AppEntryStage.needsProfile.index),
+      _SetupStep(label: '가족', done: _stage.index > AppEntryStage.needsHousehold.index),
+      _SetupStep(label: '아기', done: _stage.index > AppEntryStage.needsBaby.index),
+    ];
+
     switch (_stage) {
       case AppEntryStage.checking:
         return const _EntryScaffold(
-          title: '시작 준비 중',
-          description: '계정과 기본 데이터를 확인하고 있습니다.',
+          title: '준비 중',
+          description: '잠시만 기다려 주세요.',
           child: Center(child: CircularProgressIndicator()),
         );
       case AppEntryStage.unauthenticated:
         return _EntryScaffold(
-          title: '로그인이 필요합니다',
-          description: '카카오 → 네이버 → 구글 순으로 로그인을 지원합니다.',
+          title: '로그인해 주세요',
+          description: '로그인 방법을 선택해 주세요.',
           message: _message,
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: AppAuthProvider.values.map((provider) {
-              final enabled =
-                  provider.isDirectlySupportedByCurrentStack && !_isBusy;
-              return FilledButton.tonal(
-                onPressed: enabled ? () => _signIn(provider) : null,
-                child: Text(provider.label),
-              );
-            }).toList(),
+          steps: setupSteps,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final provider in AppAuthProvider.values.where(
+                (provider) => provider.isDirectlySupportedByCurrentStack,
+              )) ...[
+                if (provider == AppAuthProvider.kakao)
+                  FilledButton(
+                    onPressed: _isBusy ? null : () => _signIn(provider),
+                    child: Text(provider.label),
+                  )
+                else
+                  FilledButton.tonal(
+                    onPressed: _isBusy ? null : () => _signIn(provider),
+                    child: Text(provider.label),
+                  ),
+                const SizedBox(height: 10),
+              ],
+              Text(
+                '네이버 로그인은 준비 중이에요.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
           ),
         );
       case AppEntryStage.needsProfile:
         return _EntryScaffold(
-          title: '프로필 설정이 필요합니다',
-          description: '표시 이름과 기본 언어/시간대를 먼저 저장해주세요.',
+          title: '프로필을 먼저 설정해 주세요',
+          description: '이름만 입력하면 바로 시작할 수 있어요.',
           message: _message,
+          steps: setupSteps,
           child: FilledButton(
             onPressed: _openProfileSetup,
-            child: const Text('프로필 설정으로 이동'),
+            child: const Text('프로필 설정'),
           ),
         );
       case AppEntryStage.needsHousehold:
         return _EntryScaffold(
-          title: 'Household 생성이 필요합니다',
-          description: '가족/양육 그룹을 먼저 만들어야 아기와 기록을 연결할 수 있습니다.',
+          title: '가족을 먼저 만들어 주세요',
+          description: '가족 이름만 정하면 바로 이어서 등록할 수 있어요.',
           message: _message,
+          steps: setupSteps,
           child: FilledButton(
             onPressed: _openHouseholdSetup,
-            child: const Text('Household 생성으로 이동'),
+            child: const Text('가족 만들기'),
           ),
         );
       case AppEntryStage.needsBaby:
         return _EntryScaffold(
-          title: '첫 아기 등록이 필요합니다',
-          description: '아기를 등록하면 홈/기록/분석/일기 탭이 실제 데이터와 연결됩니다.',
+          title: '아기를 먼저 등록해 주세요',
+          description: '이름과 생일만 입력하면 시작할 수 있어요.',
           message: _message,
+          steps: setupSteps,
           child: FilledButton(
             onPressed: _openBabySetup,
-            child: const Text('아기 등록으로 이동'),
+            child: const Text('아기 등록'),
           ),
         );
       case AppEntryStage.ready:
@@ -264,47 +287,136 @@ class _EntryScaffold extends StatelessWidget {
     required this.description,
     required this.child,
     this.message,
+    this.steps = const [],
   });
 
   final String title;
   final String description;
   final Widget child;
   final String? message;
+  final List<_SetupStep> steps;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('BabyDay Log')),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Card(
-              child: Padding(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              colors.primaryContainer.withValues(alpha: 0.8),
+              colors.surface,
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: ListView(
                 padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: theme.textTheme.headlineSmall),
-                    const SizedBox(height: 12),
-                    Text(description, style: theme.textTheme.bodyMedium),
-                    const SizedBox(height: 20),
-                    child,
-                    if (message != null) ...[
-                      const SizedBox(height: 16),
-                      Text(
-                        message!,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.primary,
+                shrinkWrap: true,
+                children: [
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: colors.surface,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Icon(
+                          Icons.nightlight_round,
+                          color: colors.primary,
                         ),
                       ),
+                      const SizedBox(width: 14),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '육퇴로그',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          Text(
+                            '기록부터 일기까지 한 번에',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 24),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(description, style: theme.textTheme.bodyMedium),
+                          if (steps.isNotEmpty) ...[
+                            const SizedBox(height: 18),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: steps
+                                  .map(
+                                    (step) => Chip(
+                                      avatar: Icon(
+                                        step.done
+                                            ? Icons.check_circle
+                                            : Icons.radio_button_unchecked,
+                                        size: 18,
+                                      ),
+                                      label: Text(step.label),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ],
+                          const SizedBox(height: 20),
+                          child,
+                          if (message != null) ...[
+                            const SizedBox(height: 16),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: colors.primaryContainer.withValues(alpha: 0.7),
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              child: Text(
+                                message!,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colors.onPrimaryContainer,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -312,4 +424,11 @@ class _EntryScaffold extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SetupStep {
+  const _SetupStep({required this.label, required this.done});
+
+  final String label;
+  final bool done;
 }

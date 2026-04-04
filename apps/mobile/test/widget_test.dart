@@ -17,8 +17,8 @@ void main() {
     await tester.pumpWidget(const BabyDayLogApp(bootstrapState: state));
 
     expect(find.text('홈'), findsWidgets);
-    expect(find.text('오늘 홈'), findsOneWidget);
-    expect(find.text('현재 아기'), findsWidgets);
-    expect(find.text('Household 요약'), findsOneWidget);
+    expect(find.text('빠른 실행'), findsOneWidget);
+    expect(find.text('최근 로그'), findsWidgets);
+    expect(find.text('기록 추가'), findsWidgets);
   });
 }

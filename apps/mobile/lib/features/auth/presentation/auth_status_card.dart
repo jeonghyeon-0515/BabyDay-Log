@@ -101,109 +101,108 @@ class _AuthStatusCardState extends State<AuthStatusCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final bootstrapState = widget.bootstrapState;
     final canUseAuth = bootstrapState.supabaseInitialized;
     final user = _repository?.currentUser;
+    final directProviders = AppAuthProvider.values
+        .where((provider) => provider.isDirectlySupportedByCurrentStack)
+        .toList();
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('인증 상태', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 12),
-            _AuthInfoRow(
-              label: '세션 상태',
-              value: _session == null ? '비로그인' : '로그인됨',
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: colors.primaryContainer,
+                  foregroundColor: colors.primary,
+                  child: Icon(_session == null ? Icons.person_outline : Icons.check),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('계정', style: theme.textTheme.titleMedium),
+                      const SizedBox(height: 2),
+                      Text(
+                        _session == null ? '로그인되어 있지 않아요.' : (user?.email ?? '로그인됨'),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            _AuthInfoRow(label: '사용자 ID', value: user?.id ?? '없음'),
-            _AuthInfoRow(label: '이메일', value: user?.email ?? '없음'),
             const SizedBox(height: 12),
-            Text(
-              '우선순위: 카카오 → 네이버 → 구글',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+            if (_session == null)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final provider in directProviders) ...[
+                    if (provider == AppAuthProvider.kakao)
+                      FilledButton(
+                        onPressed: canUseAuth && !_isProcessing
+                            ? () => _signIn(provider)
+                            : null,
+                        child: Text(provider.label),
+                      )
+                    else
+                      FilledButton.tonal(
+                        onPressed: canUseAuth && !_isProcessing
+                            ? () => _signIn(provider)
+                            : null,
+                        child: Text(provider.label),
+                      ),
+                    const SizedBox(height: 10),
+                  ],
+                  Text(
+                    '네이버 로그인은 준비 중이에요.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              )
+            else
+              OutlinedButton(
+                onPressed: !_isProcessing ? _signOut : null,
+                child: const Text('로그아웃'),
               ),
-            ),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: AppAuthProvider.values.map((provider) {
-                final supported = provider.isDirectlySupportedByCurrentStack;
-                final enabled = canUseAuth && supported && !_isProcessing;
-                return FilledButton.tonal(
-                  onPressed: enabled ? () => _signIn(provider) : null,
-                  child: Text(provider.label),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 8),
-            for (final provider in AppAuthProvider.values)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
+            if (_feedbackMessage != null)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(18),
+                ),
                 child: Text(
-                  '- ${provider.shortLabel}: ${provider.helperText}',
-                  style: theme.textTheme.bodySmall,
+                  _feedbackMessage!,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colors.onPrimaryContainer,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: _session != null && !_isProcessing ? _signOut : null,
-              child: const Text('로그아웃'),
-            ),
-            if (_feedbackMessage != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                _feedbackMessage!,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-            ],
             if (!canUseAuth) ...[
               const SizedBox(height: 12),
               Text(
-                'SUPABASE_URL / SUPABASE_ANON_KEY dart-define 설정 후 인증을 사용할 수 있습니다.',
+                '로그인을 사용할 수 없어요.',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.error,
+                  color: colors.error,
                 ),
               ),
             ],
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _AuthInfoRow extends StatelessWidget {
-  const _AuthInfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 88,
-            child: Text(
-              label,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          Expanded(child: SelectableText(value)),
-        ],
       ),
     );
   }
