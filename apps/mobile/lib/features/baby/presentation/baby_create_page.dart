@@ -96,13 +96,14 @@ class _BabyCreatePageState extends State<BabyCreatePage> {
       );
 
       if (!mounted) return;
-      setState(() {
-        _message = '아기가 생성되었습니다.';
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('아기를 등록했어요.')),
+      );
+      Navigator.of(context).pop(true);
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _message = '아기 생성 실패: $error';
+        _message = '아기를 등록하지 못했어요.';
       });
     } finally {
       if (mounted) {
@@ -123,18 +124,19 @@ class _BabyCreatePageState extends State<BabyCreatePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('아기 생성')),
+      appBar: AppBar(title: const Text('아기 등록')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Form(
             key: _formKey,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 DropdownButtonFormField<String>(
                   initialValue: _selectedHouseholdId,
                   decoration: const InputDecoration(
-                    labelText: 'Household',
+                    labelText: '가족',
                     border: OutlineInputBorder(),
                   ),
                   items: _householdOptions
@@ -149,7 +151,7 @@ class _BabyCreatePageState extends State<BabyCreatePage> {
                       ? null
                       : (value) => setState(() => _selectedHouseholdId = value),
                   validator: (value) =>
-                      value == null ? 'Household를 선택해주세요.' : null,
+                      value == null ? '가족을 선택해 주세요.' : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -200,7 +202,7 @@ class _BabyCreatePageState extends State<BabyCreatePage> {
                 const SizedBox(height: 16),
                 FilledButton(
                   onPressed: _isSaving ? null : _save,
-                  child: Text(_isSaving ? '저장 중...' : '아기 생성'),
+                  child: Text(_isSaving ? '저장 중...' : '아기 등록'),
                 ),
               ],
             ),

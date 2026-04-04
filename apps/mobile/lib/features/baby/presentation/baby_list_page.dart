@@ -39,7 +39,7 @@ class _BabyListPageState extends State<BabyListPage> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _message = '아기 조회 실패: $error';
+        _message = '아기 정보를 불러오지 못했어요.';
       });
     } finally {
       if (mounted) {
@@ -69,9 +69,8 @@ class _BabyListPageState extends State<BabyListPage> {
                 child: ListTile(
                   title: Text(baby.name),
                   subtitle: Text(
-                    'birth: ${baby.birthDate}\n'
-                    'sex: ${baby.sex}\n'
-                    'household: ${baby.householdId}',
+                    '${baby.birthDate}\n'
+                    '${baby.sex}',
                   ),
                 ),
               ),

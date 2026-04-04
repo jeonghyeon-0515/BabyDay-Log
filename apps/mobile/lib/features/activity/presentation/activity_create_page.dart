@@ -143,15 +143,15 @@ class _ActivityCreatePageState extends State<ActivityCreatePage> {
       _resetFormPreservingBaby();
       setState(() {
         _message = savedBabyName == null
-            ? 'activity event가 생성되었습니다.'
-            : '$savedBabyName의 activity event가 생성되었습니다. 같은 아기로 바로 다음 기록을 입력할 수 있습니다.';
+            ? '기록을 저장했어요.'
+            : '$savedBabyName 기록을 저장했어요.';
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               savedBabyName == null
-                  ? 'activity event가 생성되었습니다.'
+                  ? '기록을 저장했어요.'
                   : '$savedBabyName 기록이 저장되었습니다.',
             ),
           ),
@@ -160,7 +160,7 @@ class _ActivityCreatePageState extends State<ActivityCreatePage> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _message = 'activity 생성 실패: $error';
+        _message = '기록을 저장하지 못했어요.';
       });
     } finally {
       if (mounted) {
@@ -217,7 +217,7 @@ class _ActivityCreatePageState extends State<ActivityCreatePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Activity 생성')),
+      appBar: AppBar(title: const Text('기록 추가')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -248,7 +248,7 @@ class _ActivityCreatePageState extends State<ActivityCreatePage> {
                 DropdownButtonFormField<String>(
                   initialValue: _selectedEventType,
                   decoration: const InputDecoration(
-                    labelText: '이벤트 타입',
+                    labelText: '기록 종류',
                     border: OutlineInputBorder(),
                   ),
                   items: activityEventTypes
@@ -382,7 +382,7 @@ class _ActivityCreatePageState extends State<ActivityCreatePage> {
                 if (_selectedEventType == 'sleep') ...[
                   _BuildSectionTitle(
                     title: '수면 세부 정보',
-                    description: '수면 종류, 장소, 시간을 입력해 주세요.',
+                    description: '수면 종류와 시간을 입력해 주세요.',
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
@@ -430,7 +430,7 @@ class _ActivityCreatePageState extends State<ActivityCreatePage> {
                 if (_selectedEventType == 'diaper') ...[
                   _BuildSectionTitle(
                     title: '기저귀 세부 정보',
-                    description: '기저귀 종류와 부가 상태를 입력해 주세요.',
+                    description: '상태를 입력해 주세요.',
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
@@ -503,7 +503,7 @@ class _ActivityCreatePageState extends State<ActivityCreatePage> {
                 const SizedBox(height: 16),
                 FilledButton(
                   onPressed: _isSaving ? null : _save,
-                  child: Text(_isSaving ? '저장 중...' : 'Activity 생성'),
+                  child: Text(_isSaving ? '저장 중...' : '저장'),
                 ),
               ],
             ),

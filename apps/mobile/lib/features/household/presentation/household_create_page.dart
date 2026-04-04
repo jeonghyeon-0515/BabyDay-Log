@@ -47,13 +47,14 @@ class _HouseholdCreatePageState extends State<HouseholdCreatePage> {
       );
 
       if (!mounted) return;
-      setState(() {
-        _message = 'household가 생성되었습니다.';
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('가족을 만들었어요.')),
+      );
+      Navigator.of(context).pop(true);
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _message = 'household 생성 실패: $error';
+        _message = '가족을 만들지 못했어요.';
       });
     } finally {
       if (mounted) {
@@ -76,55 +77,32 @@ class _HouseholdCreatePageState extends State<HouseholdCreatePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Household 생성')),
+      appBar: AppBar(title: const Text('가족 만들기')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Form(
             key: _formKey,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
-                    labelText: 'Household 이름',
+                    labelText: '가족 이름',
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Household 이름을 입력해주세요.';
+                      return '가족 이름을 입력해 주세요.';
                     }
                     return null;
                   },
                 ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _localeController,
-                  decoration: const InputDecoration(
-                    labelText: 'locale',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _timezoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'timezone',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _growthStandardController,
-                  decoration: const InputDecoration(
-                    labelText: 'growth_chart_standard',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
                 const SizedBox(height: 16),
                 FilledButton(
                   onPressed: _isSaving ? null : _save,
-                  child: Text(_isSaving ? '저장 중...' : 'Household 생성'),
+                  child: Text(_isSaving ? '저장 중...' : '가족 만들기'),
                 ),
               ],
             ),

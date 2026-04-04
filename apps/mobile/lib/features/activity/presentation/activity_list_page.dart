@@ -34,12 +34,12 @@ class _ActivityListPageState extends State<ActivityListPage> {
       if (!mounted) return;
       setState(() {
         _events = events;
-        _message = events.isEmpty ? '최근 activity event가 없습니다.' : null;
+        _message = events.isEmpty ? '최근 기록이 없습니다.' : null;
       });
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _message = 'activity 조회 실패: $error';
+        _message = '기록을 불러오지 못했어요.';
       });
     } finally {
       if (mounted) {
@@ -53,7 +53,7 @@ class _ActivityListPageState extends State<ActivityListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Activity 목록')),
+      appBar: AppBar(title: const Text('기록 목록')),
       body: RefreshIndicator(
         onRefresh: _loadEvents,
         child: ListView(
@@ -82,14 +82,11 @@ class _ActivityListPageState extends State<ActivityListPage> {
   String _eventSubtitle(ActivityEventSummary event) {
     final buffer = StringBuffer()
       ..write('${event.displayDetailSummary}\n')
-      ..write('상태: ${event.status}\n')
-      ..write('기록 시각: ${event.recordedAt}');
+      ..write(event.recordedAt);
 
     if (event.note != null && event.note!.trim().isNotEmpty) {
       buffer.write('\n메모: ${event.note}');
     }
-
-    buffer.write('\n아기 ID: ${event.babyId}');
     return buffer.toString();
   }
 }

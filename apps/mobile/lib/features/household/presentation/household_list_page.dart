@@ -34,12 +34,12 @@ class _HouseholdListPageState extends State<HouseholdListPage> {
       if (!mounted) return;
       setState(() {
         _households = households;
-        _message = households.isEmpty ? '참여 중인 household가 없습니다.' : null;
+        _message = households.isEmpty ? '참여 중인 가족이 없습니다.' : null;
       });
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _message = 'household 조회 실패: $error';
+        _message = '가족 목록을 불러오지 못했어요.';
       });
     } finally {
       if (mounted) {
@@ -53,7 +53,7 @@ class _HouseholdListPageState extends State<HouseholdListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Household 목록')),
+      appBar: AppBar(title: const Text('가족 목록')),
       body: RefreshIndicator(
         onRefresh: _loadHouseholds,
         child: ListView(
@@ -69,9 +69,9 @@ class _HouseholdListPageState extends State<HouseholdListPage> {
                 child: ListTile(
                   title: Text(household.name),
                   subtitle: Text(
-                    'role: ${household.role} · status: ${household.status}\n'
-                    'locale: ${household.locale} · timezone: ${household.timezone}\n'
-                    'growth: ${household.growthChartStandard}',
+                    '${household.role} · ${household.status}\n'
+                    '${household.locale} · ${household.timezone}\n'
+                    '${household.growthChartStandard}',
                   ),
                 ),
               ),
