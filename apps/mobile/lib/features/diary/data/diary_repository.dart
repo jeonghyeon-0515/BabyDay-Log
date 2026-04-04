@@ -20,7 +20,9 @@ class DiaryRepository {
 
     var query = _client
         .from('diary_entries')
-        .select('id, baby_id, visibility, body, title, event_date')
+        .select(
+          'id, baby_id, author_user_id, visibility, body, title, event_date',
+        )
         .eq('author_user_id', user.id);
 
     if (babyId != null) {
@@ -43,7 +45,9 @@ class DiaryRepository {
   }) async {
     var query = _client
         .from('diary_entries')
-        .select('id, baby_id, visibility, body, title, event_date')
+        .select(
+          'id, baby_id, author_user_id, visibility, body, title, event_date',
+        )
         .eq('visibility', 'public');
 
     if (babyId != null) {
@@ -119,5 +123,21 @@ class DiaryRepository {
       'visibility': visibility,
       'event_date': eventDate,
     });
+  }
+
+  Future<void> updateDiaryVisibility({
+    required String diaryEntryId,
+    required String visibility,
+  }) async {
+    final user = currentUser;
+    if (user == null) {
+      throw StateError('로그인된 사용자가 없습니다.');
+    }
+
+    await _client
+        .from('diary_entries')
+        .update({'visibility': visibility})
+        .eq('id', diaryEntryId)
+        .eq('author_user_id', user.id);
   }
 }

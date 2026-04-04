@@ -2,6 +2,7 @@ class DiaryEntrySummary {
   const DiaryEntrySummary({
     required this.id,
     required this.babyId,
+    required this.authorUserId,
     required this.visibility,
     required this.body,
     this.title,
@@ -12,6 +13,7 @@ class DiaryEntrySummary {
     return DiaryEntrySummary(
       id: json['id'] as String,
       babyId: json['baby_id'] as String,
+      authorUserId: json['author_user_id'] as String?,
       visibility: json['visibility'] as String? ?? 'private',
       body: json['body'] as String? ?? '',
       title: json['title'] as String?,
@@ -21,6 +23,7 @@ class DiaryEntrySummary {
 
   final String id;
   final String babyId;
+  final String? authorUserId;
   final String visibility;
   final String body;
   final String? title;

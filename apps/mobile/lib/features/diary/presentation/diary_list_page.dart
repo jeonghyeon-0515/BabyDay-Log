@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/diary_repository.dart';
 import '../domain/diary_entry_summary.dart';
+import 'diary_detail_page.dart';
 
 class DiaryListPage extends StatefulWidget {
   const DiaryListPage({super.key, required this.repository});
@@ -50,6 +51,19 @@ class _DiaryListPageState extends State<DiaryListPage> {
     }
   }
 
+  Future<void> _openDetail(DiaryEntrySummary entry) async {
+    final refreshed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) =>
+            DiaryDetailPage(repository: widget.repository, entry: entry),
+      ),
+    );
+
+    if (refreshed == true && mounted) {
+      await _loadEntries();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,6 +81,7 @@ class _DiaryListPageState extends State<DiaryListPage> {
             for (final entry in _entries) ...[
               Card(
                 child: ListTile(
+                  onTap: () => _openDetail(entry),
                   title: Text(
                     entry.title?.isNotEmpty == true ? entry.title! : '(제목 없음)',
                   ),
@@ -77,6 +92,7 @@ class _DiaryListPageState extends State<DiaryListPage> {
                     maxLines: 4,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  trailing: const Icon(Icons.chevron_right),
                 ),
               ),
               const SizedBox(height: 8),

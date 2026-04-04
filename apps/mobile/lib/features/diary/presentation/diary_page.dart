@@ -6,6 +6,7 @@ import '../../baby/presentation/baby_context_header.dart';
 import '../data/diary_repository.dart';
 import '../domain/diary_entry_summary.dart';
 import 'diary_create_page.dart';
+import 'diary_detail_page.dart';
 import 'diary_list_page.dart';
 import 'public_diary_feed_page.dart';
 
@@ -62,8 +63,14 @@ class _DiaryPageState extends State<DiaryPage> {
 
     try {
       final results = await Future.wait<List<DiaryEntrySummary>>([
-        repository.fetchRecentDiaries(limit: 20, babyId: widget.selectedBaby?.id),
-        repository.fetchPublicDiaries(limit: 20, babyId: widget.selectedBaby?.id),
+        repository.fetchRecentDiaries(
+          limit: 20,
+          babyId: widget.selectedBaby?.id,
+        ),
+        repository.fetchPublicDiaries(
+          limit: 20,
+          babyId: widget.selectedBaby?.id,
+        ),
       ]);
       final entries = results[0];
       final publicEntries = results[1];
@@ -84,6 +91,21 @@ class _DiaryPageState extends State<DiaryPage> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _openDetail(DiaryEntrySummary entry) async {
+    final repository = _repository;
+    if (repository == null) return;
+
+    final refreshed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => DiaryDetailPage(repository: repository, entry: entry),
+      ),
+    );
+
+    if (refreshed == true && mounted) {
+      await _loadEntries();
     }
   }
 
@@ -116,22 +138,21 @@ class _DiaryPageState extends State<DiaryPage> {
             ),
             const SizedBox(height: 12),
             Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('공개 일기 하이라이트', style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 12),
-                    Text(latestPublic?.title ?? '(제목 없음)'),
-                    const SizedBox(height: 8),
-                    Text(
-                      latestPublic?.body ?? '표시할 공개 일기가 없습니다.',
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+              child: ListTile(
+                onTap: latestPublic == null
+                    ? null
+                    : () => _openDetail(latestPublic),
+                title: Text('공개 일기 하이라이트', style: theme.textTheme.titleMedium),
+                subtitle: Text(
+                  latestPublic == null
+                      ? '표시할 공개 일기가 없습니다.'
+                      : '${latestPublic.title?.isNotEmpty == true ? latestPublic.title! : '(제목 없음)'}\n${latestPublic.body}',
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                trailing: latestPublic == null
+                    ? null
+                    : const Icon(Icons.chevron_right),
               ),
             ),
             const SizedBox(height: 16),
@@ -195,6 +216,7 @@ class _DiaryPageState extends State<DiaryPage> {
             for (final entry in _entries.take(5)) ...[
               Card(
                 child: ListTile(
+                  onTap: () => _openDetail(entry),
                   title: Text(
                     entry.title?.isNotEmpty == true ? entry.title! : '(제목 없음)',
                   ),
@@ -205,6 +227,7 @@ class _DiaryPageState extends State<DiaryPage> {
                     maxLines: 4,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  trailing: const Icon(Icons.chevron_right),
                 ),
               ),
               const SizedBox(height: 8),
