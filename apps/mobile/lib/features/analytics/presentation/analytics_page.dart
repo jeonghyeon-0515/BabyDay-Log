@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
 
 import '../../../bootstrap.dart';
+import '../../baby/domain/baby_summary.dart';
+import '../../baby/presentation/baby_context_header.dart';
 import '../data/analytics_repository.dart';
 import '../domain/activity_analytics_summary.dart';
 
 class AnalyticsPage extends StatefulWidget {
-  const AnalyticsPage({super.key, required this.bootstrapState});
+  const AnalyticsPage({
+    super.key,
+    required this.bootstrapState,
+    required this.selectedBaby,
+    required this.availableBabies,
+    required this.onSelectBaby,
+  });
 
   final BootstrapState bootstrapState;
+  final BabySummary? selectedBaby;
+  final List<BabySummary> availableBabies;
+  final ValueChanged<String> onSelectBaby;
 
   @override
   State<AnalyticsPage> createState() => _AnalyticsPageState();
@@ -28,6 +39,14 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     }
   }
 
+  @override
+  void didUpdateWidget(covariant AnalyticsPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedBaby?.id != widget.selectedBaby?.id) {
+      _loadSummary();
+    }
+  }
+
   Future<void> _loadSummary() async {
     final repository = _repository;
     if (repository == null) return;
@@ -38,7 +57,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     });
 
     try {
-      final summary = await repository.fetchSummary();
+      final summary = await repository.fetchSummary(babyId: widget.selectedBaby?.id);
       if (!mounted) return;
       setState(() {
         _summary = summary;
@@ -85,6 +104,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
+            BabyContextHeader(
+              selectedBaby: widget.selectedBaby,
+              availableBabies: widget.availableBabies,
+              onSelectBaby: widget.onSelectBaby,
+            ),
+            const SizedBox(height: 12),
             Wrap(
               spacing: 12,
               runSpacing: 12,

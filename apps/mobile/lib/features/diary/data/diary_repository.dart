@@ -11,14 +11,23 @@ class DiaryRepository {
 
   User? get currentUser => _client.auth.currentUser;
 
-  Future<List<DiaryEntrySummary>> fetchRecentDiaries({int limit = 20}) async {
+  Future<List<DiaryEntrySummary>> fetchRecentDiaries({
+    int limit = 20,
+    String? babyId,
+  }) async {
     final user = currentUser;
     if (user == null) return const [];
 
-    final diaries = await _client
+    var query = _client
         .from('diary_entries')
         .select('id, baby_id, visibility, body, title, event_date')
-        .eq('author_user_id', user.id)
+        .eq('author_user_id', user.id);
+
+    if (babyId != null) {
+      query = query.eq('baby_id', babyId);
+    }
+
+    final diaries = await query
         .isFilter('deleted_at', null)
         .order('created_at', ascending: false)
         .limit(limit);
@@ -28,11 +37,20 @@ class DiaryRepository {
     ).map(DiaryEntrySummary.fromJson).toList();
   }
 
-  Future<List<DiaryEntrySummary>> fetchPublicDiaries({int limit = 20}) async {
-    final diaries = await _client
+  Future<List<DiaryEntrySummary>> fetchPublicDiaries({
+    int limit = 20,
+    String? babyId,
+  }) async {
+    var query = _client
         .from('diary_entries')
         .select('id, baby_id, visibility, body, title, event_date')
-        .eq('visibility', 'public')
+        .eq('visibility', 'public');
+
+    if (babyId != null) {
+      query = query.eq('baby_id', babyId);
+    }
+
+    final diaries = await query
         .isFilter('deleted_at', null)
         .order('created_at', ascending: false)
         .limit(limit);

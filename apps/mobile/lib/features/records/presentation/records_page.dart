@@ -5,11 +5,22 @@ import '../../activity/data/activity_repository.dart';
 import '../../activity/domain/activity_event_summary.dart';
 import '../../activity/presentation/activity_create_page.dart';
 import '../../activity/presentation/activity_list_page.dart';
+import '../../baby/domain/baby_summary.dart';
+import '../../baby/presentation/baby_context_header.dart';
 
 class RecordsPage extends StatefulWidget {
-  const RecordsPage({super.key, required this.bootstrapState});
+  const RecordsPage({
+    super.key,
+    required this.bootstrapState,
+    required this.selectedBaby,
+    required this.availableBabies,
+    required this.onSelectBaby,
+  });
 
   final BootstrapState bootstrapState;
+  final BabySummary? selectedBaby;
+  final List<BabySummary> availableBabies;
+  final ValueChanged<String> onSelectBaby;
 
   @override
   State<RecordsPage> createState() => _RecordsPageState();
@@ -30,6 +41,14 @@ class _RecordsPageState extends State<RecordsPage> {
     }
   }
 
+  @override
+  void didUpdateWidget(covariant RecordsPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedBaby?.id != widget.selectedBaby?.id) {
+      _loadEvents();
+    }
+  }
+
   Future<void> _loadEvents() async {
     final repository = _repository;
     if (repository == null) return;
@@ -40,7 +59,10 @@ class _RecordsPageState extends State<RecordsPage> {
     });
 
     try {
-      final events = await repository.fetchRecentActivityEvents(limit: 20);
+      final events = await repository.fetchRecentActivityEvents(
+        limit: 20,
+        babyId: widget.selectedBaby?.id,
+      );
       if (!mounted) return;
       setState(() {
         _events = events;
@@ -80,6 +102,12 @@ class _RecordsPageState extends State<RecordsPage> {
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
+            BabyContextHeader(
+              selectedBaby: widget.selectedBaby,
+              availableBabies: widget.availableBabies,
+              onSelectBaby: widget.onSelectBaby,
+            ),
+            const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,

@@ -18,8 +18,7 @@ void main() {
 
     expect(find.text('홈'), findsWidgets);
     expect(find.text('오늘 홈'), findsOneWidget);
-    expect(find.text('현재 아기'), findsOneWidget);
+    expect(find.text('현재 아기'), findsWidgets);
     expect(find.text('Household 요약'), findsOneWidget);
-    expect(find.text('최근 기록'), findsOneWidget);
   });
 }

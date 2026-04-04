@@ -6,6 +6,7 @@ import '../../activity/domain/activity_event_summary.dart';
 import '../../activity/presentation/activity_create_page.dart';
 import '../../baby/data/baby_repository.dart';
 import '../../baby/domain/baby_summary.dart';
+import '../../baby/presentation/baby_context_header.dart';
 import '../../baby/presentation/baby_create_page.dart';
 import '../../household/data/household_repository.dart';
 import '../../household/domain/household_summary.dart';
@@ -15,9 +16,18 @@ import '../../profile/domain/user_profile.dart';
 import '../../profile/presentation/profile_edit_page.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.bootstrapState});
+  const HomeScreen({
+    super.key,
+    required this.bootstrapState,
+    required this.selectedBaby,
+    required this.availableBabies,
+    required this.onSelectBaby,
+  });
 
   final BootstrapState bootstrapState;
+  final BabySummary? selectedBaby;
+  final List<BabySummary> availableBabies;
+  final ValueChanged<String> onSelectBaby;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -26,7 +36,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   ProfileRepository? _profileRepository;
   HouseholdRepository? _householdRepository;
-  BabyRepository? _babyRepository;
   ActivityRepository? _activityRepository;
 
   UserProfile? _profile;
@@ -43,8 +52,15 @@ class _HomeScreenState extends State<HomeScreen> {
     if (widget.bootstrapState.supabaseInitialized) {
       _profileRepository = ProfileRepository();
       _householdRepository = HouseholdRepository();
-      _babyRepository = BabyRepository();
       _activityRepository = ActivityRepository();
+      _loadHomeData();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedBaby?.id != widget.selectedBaby?.id) {
       _loadHomeData();
     }
   }
@@ -52,12 +68,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadHomeData() async {
     final profileRepository = _profileRepository;
     final householdRepository = _householdRepository;
-    final babyRepository = _babyRepository;
     final activityRepository = _activityRepository;
 
     if (profileRepository == null ||
         householdRepository == null ||
-        babyRepository == null ||
         activityRepository == null) {
       return;
     }
@@ -71,20 +85,21 @@ class _HomeScreenState extends State<HomeScreen> {
       final results = await Future.wait<dynamic>([
         profileRepository.fetchMyProfile(),
         householdRepository.fetchMyHouseholds(),
-        babyRepository.fetchMyBabies(),
-        activityRepository.fetchRecentActivityEvents(limit: 1),
+        activityRepository.fetchRecentActivityEvents(
+          limit: 1,
+          babyId: widget.selectedBaby?.id,
+        ),
       ]);
 
       if (!mounted) return;
 
       final households = (results[1] as List<HouseholdSummary>);
-      final babies = (results[2] as List<BabySummary>);
-      final events = (results[3] as List<ActivityEventSummary>);
+      final events = (results[2] as List<ActivityEventSummary>);
 
       setState(() {
         _profile = results[0] as UserProfile?;
         _household = households.isEmpty ? null : households.first;
-        _baby = babies.isEmpty ? null : babies.first;
+        _baby = widget.selectedBaby;
         _latestEvent = events.isEmpty ? null : events.first;
         _message = _buildMessage(
           profile: _profile,
@@ -147,6 +162,12 @@ class _HomeScreenState extends State<HomeScreen> {
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
+            BabyContextHeader(
+              selectedBaby: widget.selectedBaby,
+              availableBabies: widget.availableBabies,
+              onSelectBaby: widget.onSelectBaby,
+            ),
+            const SizedBox(height: 12),
             _SummaryCard(
               title: '현재 아기',
               rows: [
@@ -218,11 +239,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: const Text('Household 생성'),
                   ),
                   OutlinedButton(
-                    onPressed: _babyRepository != null
+                    onPressed: canUseHome
                         ? () => Navigator.of(context).push(
                             MaterialPageRoute<void>(
                               builder: (_) =>
-                                  BabyCreatePage(repository: _babyRepository!),
+                                  BabyCreatePage(repository: BabyRepository()),
                             ),
                           )
                         : null,

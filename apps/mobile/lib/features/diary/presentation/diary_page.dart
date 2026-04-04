@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../bootstrap.dart';
+import '../../baby/domain/baby_summary.dart';
+import '../../baby/presentation/baby_context_header.dart';
 import '../data/diary_repository.dart';
 import '../domain/diary_entry_summary.dart';
 import 'diary_create_page.dart';
@@ -8,9 +10,18 @@ import 'diary_list_page.dart';
 import 'public_diary_feed_page.dart';
 
 class DiaryPage extends StatefulWidget {
-  const DiaryPage({super.key, required this.bootstrapState});
+  const DiaryPage({
+    super.key,
+    required this.bootstrapState,
+    required this.selectedBaby,
+    required this.availableBabies,
+    required this.onSelectBaby,
+  });
 
   final BootstrapState bootstrapState;
+  final BabySummary? selectedBaby;
+  final List<BabySummary> availableBabies;
+  final ValueChanged<String> onSelectBaby;
 
   @override
   State<DiaryPage> createState() => _DiaryPageState();
@@ -32,6 +43,14 @@ class _DiaryPageState extends State<DiaryPage> {
     }
   }
 
+  @override
+  void didUpdateWidget(covariant DiaryPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedBaby?.id != widget.selectedBaby?.id) {
+      _loadEntries();
+    }
+  }
+
   Future<void> _loadEntries() async {
     final repository = _repository;
     if (repository == null) return;
@@ -43,8 +62,8 @@ class _DiaryPageState extends State<DiaryPage> {
 
     try {
       final results = await Future.wait<List<DiaryEntrySummary>>([
-        repository.fetchRecentDiaries(limit: 20),
-        repository.fetchPublicDiaries(limit: 20),
+        repository.fetchRecentDiaries(limit: 20, babyId: widget.selectedBaby?.id),
+        repository.fetchPublicDiaries(limit: 20, babyId: widget.selectedBaby?.id),
       ]);
       final entries = results[0];
       final publicEntries = results[1];
@@ -90,6 +109,12 @@ class _DiaryPageState extends State<DiaryPage> {
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
+            BabyContextHeader(
+              selectedBaby: widget.selectedBaby,
+              availableBabies: widget.availableBabies,
+              onSelectBaby: widget.onSelectBaby,
+            ),
+            const SizedBox(height: 12),
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),

@@ -8,9 +8,10 @@ class AnalyticsRepository {
 
   final ActivityRepository _activityRepository;
 
-  Future<ActivityAnalyticsSummary> fetchSummary() async {
+  Future<ActivityAnalyticsSummary> fetchSummary({String? babyId}) async {
     final events = await _activityRepository.fetchRecentActivityEvents(
       limit: 50,
+      babyId: babyId,
     );
     return _buildSummary(events);
   }

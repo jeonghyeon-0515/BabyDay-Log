@@ -74,6 +74,7 @@ class ActivityRepository {
 
   Future<List<ActivityEventSummary>> fetchRecentActivityEvents({
     int limit = 10,
+    String? babyId,
   }) async {
     final user = currentUser;
     if (user == null) return const [];
@@ -90,10 +91,16 @@ class ActivityRepository {
 
     if (householdIds.isEmpty) return const [];
 
-    final events = await _client
+    var query = _client
         .from('activity_events')
         .select('id, baby_id, event_type_slug, status, recorded_at, note')
-        .inFilter('household_id', householdIds)
+        .inFilter('household_id', householdIds);
+
+    if (babyId != null) {
+      query = query.eq('baby_id', babyId);
+    }
+
+    final events = await query
         .isFilter('deleted_at', null)
         .order('recorded_at', ascending: false)
         .limit(limit);
