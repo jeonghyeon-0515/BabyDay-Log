@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/diary_repository.dart';
 import '../domain/diary_entry_summary.dart';
 import 'diary_detail_page.dart';
+import 'diary_entry_card.dart';
 
 class DiaryListPage extends StatefulWidget {
   const DiaryListPage({super.key, required this.repository});
@@ -66,6 +67,7 @@ class _DiaryListPageState extends State<DiaryListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final currentUserId = widget.repository.currentUser?.id;
     return Scaffold(
       appBar: AppBar(title: const Text('일기 목록')),
       body: RefreshIndicator(
@@ -79,21 +81,10 @@ class _DiaryListPageState extends State<DiaryListPage> {
               Text(_message!),
             ],
             for (final entry in _entries) ...[
-              Card(
-                child: ListTile(
-                  onTap: () => _openDetail(entry),
-                  title: Text(
-                    entry.title?.isNotEmpty == true ? entry.title! : '(제목 없음)',
-                  ),
-                  subtitle: Text(
-                    'visibility: ${entry.visibility}\n'
-                    'eventDate: ${entry.eventDate ?? '없음'}\n'
-                    '${entry.body}',
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                ),
+              DiaryEntryCard(
+                entry: entry,
+                currentUserId: currentUserId,
+                onTap: () => _openDetail(entry),
               ),
               const SizedBox(height: 8),
             ],

@@ -74,7 +74,7 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
       case 'private':
         return '비공개';
       case 'household':
-        return 'household 공유';
+        return '가족 공유';
       case 'public':
         return '공개';
       default:
@@ -82,9 +82,15 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
     }
   }
 
+  void _selectVisibility(String visibility) {
+    if (!_canEditVisibility) return;
+    setState(() => _selectedVisibility = visibility);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final currentUserId = widget.repository.currentUser?.id;
 
     return Scaffold(
       appBar: AppBar(title: const Text('일기 상세')),
@@ -104,11 +110,27 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                     style: theme.textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),
-                  Text('현재 공개 범위: ${_visibilityLabel(_currentVisibility)}'),
-                  const SizedBox(height: 4),
-                  Text('일기 날짜: ${widget.entry.eventDate ?? '없음'}'),
-                  const SizedBox(height: 4),
-                  Text('아기 ID: ${widget.entry.babyId}'),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      Chip(
+                        label: Text(
+                          widget.entry.authorLabel(
+                            currentUserId: currentUserId,
+                          ),
+                        ),
+                      ),
+                      Chip(
+                        label: Text(
+                          '공개 범위: ${_visibilityLabel(_currentVisibility)}',
+                        ),
+                      ),
+                      Chip(
+                        label: Text('일기 날짜: ${widget.entry.eventDate ?? '없음'}'),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
                   SelectableText(
                     widget.entry.body,
@@ -133,25 +155,37 @@ class _DiaryDetailPageState extends State<DiaryDetailPage> {
                         : '다른 사용자의 일기는 공개 범위를 바꿀 수 없습니다.',
                   ),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: _selectedVisibility,
-                    decoration: const InputDecoration(
-                      labelText: '공개 범위',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'private', child: Text('비공개')),
-                      DropdownMenuItem(
-                        value: 'household',
-                        child: Text('household 공유'),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ChoiceChip(
+                        label: const Text('비공개'),
+                        selected: _selectedVisibility == 'private',
+                        onSelected: _canEditVisibility
+                            ? (_) => _selectVisibility('private')
+                            : null,
                       ),
-                      DropdownMenuItem(value: 'public', child: Text('공개')),
+                      ChoiceChip(
+                        label: const Text('가족 공유'),
+                        selected: _selectedVisibility == 'household',
+                        onSelected: _canEditVisibility
+                            ? (_) => _selectVisibility('household')
+                            : null,
+                      ),
+                      ChoiceChip(
+                        label: const Text('공개'),
+                        selected: _selectedVisibility == 'public',
+                        onSelected: _canEditVisibility
+                            ? (_) => _selectVisibility('public')
+                            : null,
+                      ),
                     ],
-                    onChanged: _canEditVisibility
-                        ? (value) => setState(
-                            () => _selectedVisibility = value ?? 'private',
-                          )
-                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '선택된 공개 범위: ${_visibilityLabel(_selectedVisibility)}',
+                    style: theme.textTheme.bodySmall,
                   ),
                   const SizedBox(height: 12),
                   FilledButton(

@@ -7,6 +7,7 @@ import '../data/diary_repository.dart';
 import '../domain/diary_entry_summary.dart';
 import 'diary_create_page.dart';
 import 'diary_detail_page.dart';
+import 'diary_entry_card.dart';
 import 'diary_list_page.dart';
 import 'public_diary_feed_page.dart';
 
@@ -115,6 +116,7 @@ class _DiaryPageState extends State<DiaryPage> {
     final canUseDiary = widget.bootstrapState.supabaseInitialized;
     final latest = _entries.isEmpty ? null : _entries.first;
     final latestPublic = _publicEntries.isEmpty ? null : _publicEntries.first;
+    final currentUserId = _repository?.currentUser?.id;
     final publicCount = _publicEntries.length;
 
     return Scaffold(
@@ -137,23 +139,40 @@ class _DiaryPageState extends State<DiaryPage> {
               onSelectBaby: widget.onSelectBaby,
             ),
             const SizedBox(height: 12),
-            Card(
-              child: ListTile(
-                onTap: latestPublic == null
-                    ? null
-                    : () => _openDetail(latestPublic),
-                title: Text('공개 일기 하이라이트', style: theme.textTheme.titleMedium),
-                subtitle: Text(
-                  latestPublic == null
-                      ? '표시할 공개 일기가 없습니다.'
-                      : '${latestPublic.title?.isNotEmpty == true ? latestPublic.title! : '(제목 없음)'}\n${latestPublic.body}',
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: latestPublic == null
-                    ? null
-                    : const Icon(Icons.chevron_right),
-              ),
+            _SectionCard(
+              title: '내 일기',
+              subtitle: '작성한 일기와 최근 흐름을 확인합니다.',
+              trailingLabel: '${_entries.length}개',
+              child: _entries.isEmpty
+                  ? const _EmptySectionText('작성된 일기가 없습니다.')
+                  : Column(
+                      children: [
+                        DiaryEntryCard(
+                          entry: latest ?? _entries.first,
+                          currentUserId: currentUserId,
+                          onTap: () => _openDetail(latest ?? _entries.first),
+                        ),
+                        if (_entries.length > 1) ...[
+                          const SizedBox(height: 12),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '최근 작성된 일기',
+                              style: theme.textTheme.titleSmall,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          for (final entry in _entries.skip(1).take(3)) ...[
+                            DiaryEntryCard(
+                              entry: entry,
+                              currentUserId: currentUserId,
+                              onTap: () => _openDetail(entry),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                        ],
+                      ],
+                    ),
             ),
             const SizedBox(height: 16),
             Wrap(
@@ -164,7 +183,7 @@ class _DiaryPageState extends State<DiaryPage> {
                 _DiaryMetricCard(label: '공개 일기 수', value: '$publicCount'),
                 _DiaryMetricCard(
                   label: '최신 제목',
-                  value: latest?.title ?? '(제목 없음)',
+                  value: latest?.titleDisplay ?? '(제목 없음)',
                 ),
               ],
             ),
@@ -213,25 +232,43 @@ class _DiaryPageState extends State<DiaryPage> {
               ],
             ),
             const SizedBox(height: 16),
-            for (final entry in _entries.take(5)) ...[
-              Card(
-                child: ListTile(
-                  onTap: () => _openDetail(entry),
-                  title: Text(
-                    entry.title?.isNotEmpty == true ? entry.title! : '(제목 없음)',
-                  ),
-                  subtitle: Text(
-                    'visibility: ${entry.visibility}\n'
-                    'eventDate: ${entry.eventDate ?? '없음'}\n'
-                    '${entry.body}',
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                ),
+            _SectionCard(
+              title: '공개 피드',
+              subtitle: '가족 밖으로 공유된 일기와 흐름을 확인합니다.',
+              trailingLabel: '$publicCount개',
+              child: Column(
+                children: [
+                  if (latestPublic == null)
+                    const _EmptySectionText('표시할 공개 일기가 없습니다.')
+                  else ...[
+                    DiaryEntryCard(
+                      entry: latestPublic,
+                      currentUserId: currentUserId,
+                      onTap: () => _openDetail(latestPublic),
+                      highlight: true,
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '최근 공개 일기',
+                        style: theme.textTheme.titleSmall,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    for (final entry in _publicEntries.skip(1).take(3)) ...[
+                      DiaryEntryCard(
+                        entry: entry,
+                        currentUserId: currentUserId,
+                        onTap: () => _openDetail(entry),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ],
+                ],
               ),
-              const SizedBox(height: 8),
-            ],
+            ),
+            const SizedBox(height: 16),
             if (_message != null) ...[
               const SizedBox(height: 12),
               Text(
@@ -280,6 +317,70 @@ class _DiaryMetricCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({
+    required this.title,
+    required this.subtitle,
+    required this.child,
+    required this.trailingLabel,
+  });
+
+  final String title;
+  final String subtitle;
+  final Widget child;
+  final String trailingLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: theme.textTheme.titleLarge),
+                      const SizedBox(height: 4),
+                      Text(subtitle, style: theme.textTheme.bodySmall),
+                    ],
+                  ),
+                ),
+                Chip(
+                  label: Text(trailingLabel),
+                  visualDensity: VisualDensity.compact,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptySectionText extends StatelessWidget {
+  const _EmptySectionText(this.message);
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Align(alignment: Alignment.centerLeft, child: Text(message)),
     );
   }
 }
