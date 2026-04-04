@@ -129,16 +129,16 @@ class _HomeScreenState extends State<HomeScreen> {
     required ActivityEventSummary? event,
   }) {
     if (profile == null) {
-      return '프로필을 먼저 저장하면 홈 화면 정보를 더 정확하게 보여줄 수 있습니다.';
+      return '프로필을 먼저 설정해 주세요.';
     }
     if (household == null) {
-      return 'Household를 생성하면 아기와 기록을 연결할 수 있습니다.';
+      return '가족을 먼저 만들어 주세요.';
     }
     if (baby == null) {
-      return '아기를 생성하면 홈에서 오늘 상태를 보여줄 수 있습니다.';
+      return '아기를 등록하면 홈이 채워져요.';
     }
     if (event == null) {
-      return '첫 activity를 기록하면 오늘 요약이 채워집니다.';
+      return '첫 기록을 남겨 보세요.';
     }
     return null;
   }
@@ -146,7 +146,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final canUseHome = widget.bootstrapState.supabaseInitialized;
+    final headlineName = _profile?.displayName.trim().isNotEmpty == true
+        ? _profile!.displayName
+        : '육퇴로그';
 
     return Scaffold(
       appBar: AppBar(title: const Text('홈')),
@@ -155,101 +159,49 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            Text('오늘 홈', style: theme.textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            Text(
-              '현재 사용자, household, 아기, 최근 기록을 기준으로 오늘 상태를 보여줍니다.',
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
             BabyContextHeader(
               selectedBaby: widget.selectedBaby,
               availableBabies: widget.availableBabies,
               onSelectBaby: widget.onSelectBaby,
             ),
             const SizedBox(height: 12),
-            _SummaryCard(
-              title: '현재 아기',
-              rows: [
-                _SummaryRow(label: '이름', value: _baby?.name ?? '없음'),
-                _SummaryRow(label: '생년월일', value: _baby?.birthDate ?? '없음'),
-                _SummaryRow(label: '성별', value: _baby?.sex ?? '없음'),
-              ],
+            _HeroCard(
+              title: '안녕하세요, $headlineName',
+              subtitle: _baby == null
+                  ? '아기를 등록하면 오늘 상태를 볼 수 있어요.'
+                  : '${_baby!.name}의 오늘 기록을 확인해 보세요.',
+              badge: _latestEvent == null ? '새 기록 없음' : _latestEvent!.eventTypeLabel,
+              badgeColor: colors.primaryContainer,
             ),
-            const SizedBox(height: 12),
-            _SummaryCard(
-              title: 'Household 요약',
-              rows: [
-                _SummaryRow(label: '이름', value: _household?.name ?? '없음'),
-                _SummaryRow(label: '역할', value: _household?.role ?? '없음'),
-                _SummaryRow(
-                  label: '성장 기준',
-                  value: _household?.growthChartStandard ?? '없음',
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                _MetricCard(
+                  label: '아기',
+                  value: _baby?.name ?? '미등록',
+                  helper: _baby?.birthDate ?? '등록이 필요해요',
+                ),
+                _MetricCard(
+                  label: '가족',
+                  value: _household?.name ?? '미등록',
+                  helper: _household?.role ?? '가족을 만들어 주세요',
+                ),
+                _MetricCard(
+                  label: '최근 로그',
+                  value: _latestEvent?.eventTypeLabel ?? '없음',
+                  helper: _latestEvent?.recordedAt ?? '기록을 남겨 보세요',
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             _SummaryCard(
-              title: '최근 기록',
-              rows: [
-                _SummaryRow(
-                  label: '이벤트 타입',
-                  value: _latestEvent?.eventTypeSlug ?? '없음',
-                ),
-                _SummaryRow(label: '상태', value: _latestEvent?.status ?? '없음'),
-                _SummaryRow(
-                  label: '기록 시각',
-                  value: _latestEvent?.recordedAt ?? '없음',
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _SummaryCard(
-              title: '빠른 작업',
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
+              title: '빠른 실행',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  FilledButton.tonal(
-                    onPressed: canUseHome && !_isLoading ? _loadHomeData : null,
-                    child: Text(_isLoading ? '새로고침 중...' : '홈 새로고침'),
-                  ),
-                  OutlinedButton(
-                    onPressed: _profileRepository != null
-                        ? () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => ProfileEditPage(
-                                repository: _profileRepository!,
-                              ),
-                            ),
-                          )
-                        : null,
-                    child: const Text('프로필 저장'),
-                  ),
-                  OutlinedButton(
-                    onPressed: _householdRepository != null
-                        ? () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => HouseholdCreatePage(
-                                repository: _householdRepository!,
-                              ),
-                            ),
-                          )
-                        : null,
-                    child: const Text('Household 생성'),
-                  ),
-                  OutlinedButton(
-                    onPressed: canUseHome
-                        ? () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) =>
-                                  BabyCreatePage(repository: BabyRepository()),
-                            ),
-                          )
-                        : null,
-                    child: const Text('아기 생성'),
-                  ),
-                  OutlinedButton(
+                  FilledButton.icon(
                     onPressed: _activityRepository != null
                         ? () => Navigator.of(context).push(
                             MaterialPageRoute<void>(
@@ -259,27 +211,98 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           )
                         : null,
-                    child: const Text('기록 추가'),
+                    icon: const Icon(Icons.add_circle_outline),
+                    label: const Text('기록 추가'),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.tonal(
+                        onPressed: canUseHome && !_isLoading ? _loadHomeData : null,
+                        child: Text(_isLoading ? '불러오는 중...' : '새로고침'),
+                      ),
+                      OutlinedButton(
+                        onPressed: _profileRepository != null
+                            ? () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => ProfileEditPage(
+                                    repository: _profileRepository!,
+                                  ),
+                                ),
+                              )
+                            : null,
+                        child: const Text('프로필'),
+                      ),
+                      OutlinedButton(
+                        onPressed: _householdRepository != null
+                            ? () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => HouseholdCreatePage(
+                                    repository: _householdRepository!,
+                                  ),
+                                ),
+                              )
+                            : null,
+                        child: const Text('가족 만들기'),
+                      ),
+                      OutlinedButton(
+                        onPressed: canUseHome
+                            ? () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) =>
+                                      BabyCreatePage(repository: BabyRepository()),
+                                ),
+                              )
+                            : null,
+                        child: const Text('아기 등록'),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 16),
+            _SummaryCard(
+              title: '최근 로그',
+              child: _latestEvent == null
+                  ? const _EmptyHint(message: '아직 기록이 없습니다.')
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _latestEvent!.eventTypeLabel,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(_latestEvent!.displayDetailSummary),
+                        const SizedBox(height: 4),
+                        Text(
+                          _latestEvent!.recordedAt,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
             if (_message != null) ...[
               const SizedBox(height: 12),
-              Text(
-                _message!,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                ),
+              _InlineMessage(
+                message: _message!,
+                color: colors.primaryContainer,
+                textColor: colors.onPrimaryContainer,
               ),
             ],
             if (!canUseHome) ...[
               const SizedBox(height: 12),
-              Text(
-                'Supabase 초기화 후 홈 탭을 사용할 수 있습니다.',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.error,
-                ),
+              _InlineMessage(
+                message: '지금은 홈을 불러올 수 없어요.',
+                color: colors.errorContainer,
+                textColor: colors.onErrorContainer,
               ),
             ],
           ],
@@ -290,10 +313,9 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.title, this.rows = const [], this.child});
+  const _SummaryCard({required this.title, this.child});
 
   final String title;
-  final List<_SummaryRow> rows;
   final Widget? child;
 
   @override
@@ -302,35 +324,18 @@ class _SummaryCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 12),
-            if (child case final widgetChild?)
-              widgetChild
-            else
-              ...rows.map(
-                (row) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        width: 96,
-                        child: Text(
-                          row.label,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      Expanded(child: SelectableText(row.value)),
-                    ],
-                  ),
-                ),
+            Text(
+              title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
               ),
+            ),
+            const SizedBox(height: 14),
+            if (child != null) ...[child!],
           ],
         ),
       ),
@@ -338,9 +343,152 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-class _SummaryRow {
-  const _SummaryRow({required this.label, required this.value});
+class _MetricCard extends StatelessWidget {
+  const _MetricCard({
+    required this.label,
+    required this.value,
+    required this.helper,
+  });
 
   final String label;
   final String value;
+  final String helper;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return SizedBox(
+      width: 165,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                value,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                helper,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroCard extends StatelessWidget {
+  const _HeroCard({
+    required this.title,
+    required this.subtitle,
+    required this.badge,
+    required this.badgeColor,
+  });
+
+  final String title;
+  final String subtitle;
+  final String badge;
+  final Color badgeColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Chip(
+              label: Text(badge),
+              backgroundColor: badgeColor,
+              labelStyle: theme.textTheme.labelMedium?.copyWith(
+                color: colors.onPrimaryContainer,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              title,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InlineMessage extends StatelessWidget {
+  const _InlineMessage({
+    required this.message,
+    required this.color,
+    required this.textColor,
+  });
+
+  final String message;
+  final Color color;
+  final Color textColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Text(
+        message,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: textColor,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyHint extends StatelessWidget {
+  const _EmptyHint({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      message,
+      style: Theme.of(context).textTheme.bodyMedium,
+    );
+  }
 }

@@ -66,8 +66,8 @@ class MorePage extends StatelessWidget {
             title: '계정',
             children: [
               _SectionTile(
-                title: '계정 상태',
-                subtitle: '로그인 상태와 소셜 로그인 진입을 확인합니다.',
+                title: '계정',
+                subtitle: '로그인 상태를 확인합니다.',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) =>
@@ -76,8 +76,8 @@ class MorePage extends StatelessWidget {
                 ),
               ),
               _SectionTile(
-                title: '프로필 설정',
-                subtitle: '표시 이름 / locale / timezone을 수정합니다.',
+                title: '프로필',
+                subtitle: '이름을 수정합니다.',
                 onTap: profileRepository == null
                     ? null
                     : () => Navigator.of(context).push(
@@ -94,8 +94,8 @@ class MorePage extends StatelessWidget {
             title: '가족 설정',
             children: [
               _SectionTile(
-                title: 'Household 목록',
-                subtitle: '참여 중인 household를 확인합니다.',
+                title: '가족 목록',
+                subtitle: '참여 중인 가족을 확인합니다.',
                 onTap: householdRepository == null
                     ? null
                     : () => Navigator.of(context).push(
@@ -107,8 +107,8 @@ class MorePage extends StatelessWidget {
                       ),
               ),
               _SectionTile(
-                title: 'Household 생성',
-                subtitle: '새 family/household를 생성합니다.',
+                title: '가족 만들기',
+                subtitle: '새 가족을 만듭니다.',
                 onTap: householdRepository == null
                     ? null
                     : () => Navigator.of(context).push(
@@ -121,7 +121,7 @@ class MorePage extends StatelessWidget {
               ),
               _SectionTile(
                 title: '아기 목록',
-                subtitle: '등록된 아기 정보를 확인합니다.',
+                subtitle: '등록된 아기를 확인합니다.',
                 onTap: babyRepository == null
                     ? null
                     : () => Navigator.of(context).push(
@@ -132,7 +132,7 @@ class MorePage extends StatelessWidget {
                       ),
               ),
               _SectionTile(
-                title: '아기 생성',
+                title: '아기 등록',
                 subtitle: '새 아기를 등록합니다.',
                 onTap: babyRepository == null
                     ? null
@@ -150,8 +150,8 @@ class MorePage extends StatelessWidget {
             title: '기록 관리',
             children: [
               _SectionTile(
-                title: 'Activity 목록',
-                subtitle: '최근 activity 기록을 확인합니다.',
+                title: '기록 목록',
+                subtitle: '기록을 확인합니다.',
                 onTap: activityRepository == null
                     ? null
                     : () => Navigator.of(context).push(
@@ -162,8 +162,8 @@ class MorePage extends StatelessWidget {
                       ),
               ),
               _SectionTile(
-                title: 'Activity 생성',
-                subtitle: '새 activity 기록을 추가합니다.',
+                title: '기록 추가',
+                subtitle: '새 기록을 남깁니다.',
                 onTap: activityRepository == null
                     ? null
                     : () => Navigator.of(context).push(
@@ -176,7 +176,7 @@ class MorePage extends StatelessWidget {
               ),
               _SectionTile(
                 title: '일기 목록',
-                subtitle: '비공개/공개 일기를 확인합니다.',
+                subtitle: '내 일기를 확인합니다.',
                 onTap: diaryRepository == null
                     ? null
                     : () => Navigator.of(context).push(
@@ -188,7 +188,7 @@ class MorePage extends StatelessWidget {
               ),
               _SectionTile(
                 title: '일기 작성',
-                subtitle: '새 성장일기를 작성합니다.',
+                subtitle: '새 일기를 작성합니다.',
                 onTap: diaryRepository == null
                     ? null
                     : () => Navigator.of(context).push(
@@ -197,24 +197,6 @@ class MorePage extends StatelessWidget {
                               DiaryCreatePage(repository: diaryRepository),
                         ),
                       ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _SectionCard(
-            title: '앱 정보',
-            children: [
-              _InfoRow(
-                label: 'APP_ENV',
-                value: bootstrapState.config.environment,
-              ),
-              _InfoRow(
-                label: 'PROJECT_REF',
-                value: bootstrapState.config.projectRef,
-              ),
-              _InfoRow(
-                label: 'SUPABASE',
-                value: bootstrapState.supabaseInitialized ? '연결 완료' : '미초기화',
               ),
             ],
           ),
@@ -263,31 +245,16 @@ class _SectionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-      title: Text(title),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      title: Text(
+        title,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+        ),
+      ),
       subtitle: Text(subtitle),
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-      child: Row(
-        children: [
-          SizedBox(width: 100, child: Text(label)),
-          Expanded(child: SelectableText(value)),
-        ],
-      ),
     );
   }
 }

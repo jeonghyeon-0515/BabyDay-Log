@@ -66,12 +66,12 @@ class _RecordsPageState extends State<RecordsPage> {
       if (!mounted) return;
       setState(() {
         _events = events;
-        _message = events.isEmpty ? '기록된 activity event가 없습니다.' : null;
+        _message = events.isEmpty ? '아직 기록이 없습니다.' : null;
       });
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _message = '기록 탭 조회 실패: $error';
+        _message = '기록을 불러오지 못했어요.';
       });
     } finally {
       if (mounted) {
@@ -99,13 +99,25 @@ class _RecordsPageState extends State<RecordsPage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text('최근 기록', style: theme.textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            Text(
-              'activity 도메인을 기록 탭에 실제 연결한 첫 단계입니다.',
-              style: theme.textTheme.bodyMedium,
+            Row(
+              children: [
+                Expanded(
+                  child: Text('기록', style: theme.textTheme.headlineSmall),
+                ),
+                FilledButton(
+                  onPressed: canUseRecords && repository != null
+                      ? () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                ActivityCreatePage(repository: repository),
+                          ),
+                        )
+                      : null,
+                  child: const Text('기록 추가'),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             BabyContextHeader(
               selectedBaby: widget.selectedBaby,
               availableBabies: widget.availableBabies,
@@ -141,18 +153,7 @@ class _RecordsPageState extends State<RecordsPage> {
               children: [
                 FilledButton.tonal(
                   onPressed: canUseRecords && !_isLoading ? _loadEvents : null,
-                  child: Text(_isLoading ? '조회 중...' : '기록 새로고침'),
-                ),
-                OutlinedButton(
-                  onPressed: canUseRecords && repository != null
-                      ? () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) =>
-                                ActivityCreatePage(repository: repository),
-                          ),
-                        )
-                      : null,
-                  child: const Text('기록 추가'),
+                  child: Text(_isLoading ? '불러오는 중...' : '새로고침'),
                 ),
                 OutlinedButton(
                   onPressed: canUseRecords && repository != null
@@ -179,7 +180,7 @@ class _RecordsPageState extends State<RecordsPage> {
             if (!canUseRecords) ...[
               const SizedBox(height: 12),
               Text(
-                'Supabase 초기화 후 기록 탭을 사용할 수 있습니다.',
+                '지금은 기록을 불러올 수 없어요.',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.error,
                 ),
@@ -205,14 +206,11 @@ class _RecordsPageState extends State<RecordsPage> {
   String _eventSubtitle(ActivityEventSummary event) {
     final buffer = StringBuffer()
       ..write('${event.displayDetailSummary}\n')
-      ..write('상태: ${event.status}\n')
-      ..write('기록 시각: ${event.recordedAt}');
+      ..write(event.recordedAt);
 
     if (event.note != null && event.note!.trim().isNotEmpty) {
       buffer.write('\n메모: ${event.note}');
     }
-
-    buffer.write('\n아기 ID: ${event.babyId}');
     return buffer.toString();
   }
 

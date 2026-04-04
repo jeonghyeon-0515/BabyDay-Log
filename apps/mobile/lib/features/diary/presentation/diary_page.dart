@@ -79,12 +79,12 @@ class _DiaryPageState extends State<DiaryPage> {
       setState(() {
         _entries = entries;
         _publicEntries = publicEntries;
-        _message = entries.isEmpty ? '작성된 일기가 없습니다.' : null;
+        _message = entries.isEmpty ? '아직 일기가 없습니다.' : null;
       });
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _message = '일기 탭 조회 실패: $error';
+        _message = '일기를 불러오지 못했어요.';
       });
     } finally {
       if (mounted) {
@@ -126,13 +126,25 @@ class _DiaryPageState extends State<DiaryPage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text('일기 요약', style: theme.textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            Text(
-              '비공개/공개 성장일기의 첫 단계를 연결했습니다.',
-              style: theme.textTheme.bodyMedium,
+            Row(
+              children: [
+                Expanded(
+                  child: Text('일기', style: theme.textTheme.headlineSmall),
+                ),
+                FilledButton(
+                  onPressed: canUseDiary && _repository != null
+                      ? () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                DiaryCreatePage(repository: _repository!),
+                          ),
+                        )
+                      : null,
+                  child: const Text('일기 작성'),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             BabyContextHeader(
               selectedBaby: widget.selectedBaby,
               availableBabies: widget.availableBabies,
@@ -194,18 +206,7 @@ class _DiaryPageState extends State<DiaryPage> {
               children: [
                 FilledButton.tonal(
                   onPressed: canUseDiary && !_isLoading ? _loadEntries : null,
-                  child: Text(_isLoading ? '조회 중...' : '일기 새로고침'),
-                ),
-                OutlinedButton(
-                  onPressed: canUseDiary && _repository != null
-                      ? () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) =>
-                                DiaryCreatePage(repository: _repository!),
-                          ),
-                        )
-                      : null,
-                  child: const Text('일기 작성'),
+                  child: Text(_isLoading ? '불러오는 중...' : '새로고침'),
                 ),
                 OutlinedButton(
                   onPressed: canUseDiary && _repository != null
@@ -281,7 +282,7 @@ class _DiaryPageState extends State<DiaryPage> {
             if (!canUseDiary) ...[
               const SizedBox(height: 12),
               Text(
-                'Supabase 초기화 후 일기 탭을 사용할 수 있습니다.',
+                '지금은 일기를 불러올 수 없어요.',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.error,
                 ),

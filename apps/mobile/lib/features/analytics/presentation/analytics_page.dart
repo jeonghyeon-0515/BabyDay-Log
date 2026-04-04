@@ -65,12 +65,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       if (!mounted) return;
       setState(() {
         _summary = summary;
-        _message = summary.hasData ? null : '기록이 아직 충분하지 않아 분석 요약이 비어 있습니다.';
+        _message = summary.hasData ? null : '기록이 더 쌓이면 분석이 채워져요.';
       });
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _message = '분석 데이터 조회 실패: $error';
+        _message = '분석을 불러오지 못했어요.';
       });
     } finally {
       if (mounted) {
@@ -100,14 +100,20 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text('분석 요약', style: theme.textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            Text(
-              summary?.dataInsight ??
-                  '최근 기록을 모아 24시간/7일 요약과 수유·수면·기저귀 패턴을 보여줍니다.',
-              style: theme.textTheme.bodyMedium,
+            Row(
+              children: [
+                Expanded(
+                  child: Text('분석', style: theme.textTheme.headlineSmall),
+                ),
+                FilledButton.tonal(
+                  onPressed: canUseAnalytics && !_isLoading
+                      ? _loadSummary
+                      : null,
+                  child: Text(_isLoading ? '불러오는 중...' : '새로고침'),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             BabyContextHeader(
               selectedBaby: widget.selectedBaby,
               availableBabies: widget.availableBabies,
@@ -128,22 +134,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
             else if (summary != null) ...[
               const SizedBox(height: 16),
               _EmptyAnalyticsCard(
-                message:
-                    '기록이 아직 충분하지 않습니다.\n수유·수면·기저귀 기록이 쌓이면 24시간/7일 비교와 패턴 분석이 자동으로 채워집니다.',
+                message: '수유·수면·기저귀 기록이 쌓이면 여기에서 흐름을 볼 수 있어요.',
               ),
             ],
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                FilledButton.tonal(
-                  onPressed: canUseAnalytics && !_isLoading
-                      ? _loadSummary
-                      : null,
-                  child: Text(_isLoading ? '조회 중...' : '분석 새로고침'),
-                ),
-              ],
-            ),
             if (_message != null) ...[
               const SizedBox(height: 12),
               Text(
@@ -156,7 +149,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
             if (!canUseAnalytics) ...[
               const SizedBox(height: 12),
               Text(
-                'Supabase 초기화 후 분석 탭을 사용할 수 있습니다.',
+                '지금은 분석을 불러올 수 없어요.',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.error,
                 ),
