@@ -1,3 +1,5 @@
+import 'activity_event_type.dart';
+
 class ActivityEventSummary {
   const ActivityEventSummary({
     required this.id,
@@ -25,4 +27,6 @@ class ActivityEventSummary {
   final String status;
   final String recordedAt;
   final String? note;
+
+  String get eventTypeLabel => activityEventTypeLabel(eventTypeSlug);
 }

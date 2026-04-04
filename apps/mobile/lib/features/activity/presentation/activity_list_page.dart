@@ -67,12 +67,8 @@ class _ActivityListPageState extends State<ActivityListPage> {
             for (final event in _events) ...[
               Card(
                 child: ListTile(
-                  title: Text(event.eventTypeSlug),
-                  subtitle: Text(
-                    'status: ${event.status}\n'
-                    'recordedAt: ${event.recordedAt}\n'
-                    'babyId: ${event.babyId}',
-                  ),
+                  title: Text(event.eventTypeLabel),
+                  subtitle: Text(_eventSubtitle(event)),
                 ),
               ),
               const SizedBox(height: 8),
@@ -81,5 +77,18 @@ class _ActivityListPageState extends State<ActivityListPage> {
         ),
       ),
     );
+  }
+
+  String _eventSubtitle(ActivityEventSummary event) {
+    final buffer = StringBuffer()
+      ..write('status: ${event.status}\n')
+      ..write('recordedAt: ${event.recordedAt}');
+
+    if (event.note != null && event.note!.trim().isNotEmpty) {
+      buffer.write('\nnote: ${event.note}');
+    }
+
+    buffer.write('\nbabyId: ${event.babyId}');
+    return buffer.toString();
   }
 }

@@ -77,7 +77,7 @@ class _ActivityStatusCardState extends State<ActivityStatusCard> {
             _ActivityRow(label: '최근 이벤트 수', value: '${_events.length}'),
             _ActivityRow(
               label: '최신 타입',
-              value: latestEvent?.eventTypeSlug ?? '없음',
+              value: latestEvent?.eventTypeLabel ?? '없음',
             ),
             _ActivityRow(label: '최신 상태', value: latestEvent?.status ?? '없음'),
             _ActivityRow(
