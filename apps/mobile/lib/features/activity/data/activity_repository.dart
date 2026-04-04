@@ -252,8 +252,214 @@ class ActivityRepository {
         .order('recorded_at', ascending: false)
         .limit(limit);
 
-    return List<Map<String, dynamic>>.from(
+    final summaries = List<Map<String, dynamic>>.from(
       events,
     ).map(ActivityEventSummary.fromJson).toList();
+
+    return _enrichRecentActivityEvents(summaries);
+  }
+
+  Future<List<ActivityEventSummary>> _enrichRecentActivityEvents(
+    List<ActivityEventSummary> events,
+  ) async {
+    if (events.isEmpty) return events;
+
+    final eventIds = events.map((event) => event.id).toList();
+    final detailSummaries = await _fetchDetailSummaries(eventIds);
+
+    return events
+        .map(
+          (event) => event.copyWith(detailSummary: detailSummaries[event.id]),
+        )
+        .toList();
+  }
+
+  Future<Map<String, String>> _fetchDetailSummaries(
+    List<String> eventIds,
+  ) async {
+    if (eventIds.isEmpty) return const {};
+
+    final result = await Future.wait([
+      _client
+          .from('feeding_event_details')
+          .select(
+            'event_id, feeding_mode, breast_side, left_duration_sec, right_duration_sec, amount_value, amount_unit, content_type',
+          )
+          .inFilter('event_id', eventIds),
+      _client
+          .from('sleep_event_details')
+          .select('event_id, sleep_type, location, fell_asleep_at, woke_up_at')
+          .inFilter('event_id', eventIds),
+      _client
+          .from('diaper_event_details')
+          .select(
+            'event_id, diaper_type, stool_color, stool_texture, rash_observed',
+          )
+          .inFilter('event_id', eventIds),
+    ]);
+    final feedingRows = result[0];
+    final sleepRows = result[1];
+    final diaperRows = result[2];
+
+    final summaries = <String, String>{};
+
+    for (final row in List<Map<String, dynamic>>.from(feedingRows)) {
+      final eventId = row['event_id'] as String? ?? '';
+      if (eventId.isEmpty) continue;
+      summaries[eventId] = _buildFeedingDetailSummary(row);
+    }
+
+    for (final row in List<Map<String, dynamic>>.from(sleepRows)) {
+      final eventId = row['event_id'] as String? ?? '';
+      if (eventId.isEmpty) continue;
+      summaries[eventId] = _buildSleepDetailSummary(row);
+    }
+
+    for (final row in List<Map<String, dynamic>>.from(diaperRows)) {
+      final eventId = row['event_id'] as String? ?? '';
+      if (eventId.isEmpty) continue;
+      summaries[eventId] = _buildDiaperDetailSummary(row);
+    }
+
+    return summaries;
+  }
+
+  String _buildFeedingDetailSummary(Map<String, dynamic> row) {
+    final feedingMode = row['feeding_mode'] as String? ?? '';
+    if (feedingMode == 'bottle') {
+      final amountValue = row['amount_value'];
+      final amountUnit = row['amount_unit'] as String? ?? '';
+      final contentType = _feedingContentLabel(row['content_type'] as String?);
+      final amountText = _formatNumericValue(amountValue);
+      final parts = <String>[
+        '젖병 $amountText${amountUnit.isEmpty ? '' : amountUnit}',
+      ];
+      if (contentType.isNotEmpty) {
+        parts.add(contentType);
+      }
+      return parts.join(' · ');
+    }
+
+    if (feedingMode == 'breast') {
+      final leftDurationSec = row['left_duration_sec'] as int? ?? 0;
+      final rightDurationSec = row['right_duration_sec'] as int? ?? 0;
+      final totalMinutes = (leftDurationSec + rightDurationSec) ~/ 60;
+      final breastSide = _breastSideLabel(row['breast_side'] as String?);
+      return '모유 ${_formatDurationMinutes(totalMinutes)} · $breastSide';
+    }
+
+    return '수유 기록';
+  }
+
+  String _buildSleepDetailSummary(Map<String, dynamic> row) {
+    final sleepType = _sleepTypeLabel(row['sleep_type'] as String?);
+    final fellAsleepAt = DateTime.tryParse(
+      row['fell_asleep_at'] as String? ?? '',
+    );
+    final wokeUpAt = DateTime.tryParse(row['woke_up_at'] as String? ?? '');
+    final location = (row['location'] as String? ?? '').trim();
+    final durationMinutes = fellAsleepAt != null && wokeUpAt != null
+        ? wokeUpAt.difference(fellAsleepAt).inMinutes
+        : null;
+
+    final parts = <String>[sleepType];
+    if (durationMinutes != null && durationMinutes > 0) {
+      parts.add(_formatDurationMinutes(durationMinutes));
+    }
+    if (location.isNotEmpty) {
+      parts.add(location);
+    }
+    return parts.join(' · ');
+  }
+
+  String _buildDiaperDetailSummary(Map<String, dynamic> row) {
+    final diaperType = _diaperTypeLabel(row['diaper_type'] as String?);
+    final rashObserved = row['rash_observed'] as bool? ?? false;
+    final stoolColor = (row['stool_color'] as String? ?? '').trim();
+    final stoolTexture = (row['stool_texture'] as String? ?? '').trim();
+
+    final parts = <String>[diaperType];
+    if (stoolColor.isNotEmpty) {
+      parts.add(stoolColor);
+    }
+    if (stoolTexture.isNotEmpty) {
+      parts.add(stoolTexture);
+    }
+    parts.add(rashObserved ? '발진 있음' : '발진 없음');
+    return parts.join(' · ');
+  }
+
+  String _feedingContentLabel(String? contentType) {
+    switch (contentType) {
+      case 'formula':
+        return '분유';
+      case 'breast_milk':
+        return '모유';
+      case 'mixed':
+        return '혼합';
+      default:
+        return contentType ?? '';
+    }
+  }
+
+  String _breastSideLabel(String? breastSide) {
+    switch (breastSide) {
+      case 'left':
+        return '왼쪽';
+      case 'right':
+        return '오른쪽';
+      case 'both':
+        return '양쪽';
+      default:
+        return '양쪽';
+    }
+  }
+
+  String _sleepTypeLabel(String? sleepType) {
+    switch (sleepType) {
+      case 'nap':
+        return '낮잠';
+      case 'night':
+        return '밤잠';
+      default:
+        return sleepType ?? '수면';
+    }
+  }
+
+  String _diaperTypeLabel(String? diaperType) {
+    switch (diaperType) {
+      case 'wet':
+        return '소변';
+      case 'dirty':
+        return '대변';
+      case 'mixed':
+        return '혼합';
+      case 'dry':
+        return '건조';
+      default:
+        return diaperType ?? '기저귀';
+    }
+  }
+
+  String _formatDurationMinutes(int totalMinutes) {
+    if (totalMinutes < 60) {
+      return '$totalMinutes분';
+    }
+
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
+    if (minutes == 0) {
+      return '$hours시간';
+    }
+    return '$hours시간 $minutes분';
+  }
+
+  String _formatNumericValue(Object? value) {
+    if (value is num) {
+      return value == value.roundToDouble()
+          ? value.toInt().toString()
+          : value.toDouble().toStringAsFixed(1);
+    }
+    return value?.toString() ?? '0';
   }
 }

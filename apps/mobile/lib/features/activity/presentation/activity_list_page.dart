@@ -81,14 +81,15 @@ class _ActivityListPageState extends State<ActivityListPage> {
 
   String _eventSubtitle(ActivityEventSummary event) {
     final buffer = StringBuffer()
-      ..write('status: ${event.status}\n')
-      ..write('recordedAt: ${event.recordedAt}');
+      ..write('${event.displayDetailSummary}\n')
+      ..write('상태: ${event.status}\n')
+      ..write('기록 시각: ${event.recordedAt}');
 
     if (event.note != null && event.note!.trim().isNotEmpty) {
-      buffer.write('\nnote: ${event.note}');
+      buffer.write('\n메모: ${event.note}');
     }
 
-    buffer.write('\nbabyId: ${event.babyId}');
+    buffer.write('\n아기 ID: ${event.babyId}');
     return buffer.toString();
   }
 }

@@ -136,9 +136,27 @@ class _ActivityCreatePageState extends State<ActivityCreatePage> {
       );
 
       if (!mounted) return;
+      final savedBabyName = _babyOptions
+          .where((option) => option.id == _selectedBabyId)
+          .map((option) => option.name)
+          .fold<String?>(null, (previous, name) => previous ?? name);
+      _resetFormPreservingBaby();
       setState(() {
-        _message = 'activity event가 생성되었습니다.';
+        _message = savedBabyName == null
+            ? 'activity event가 생성되었습니다.'
+            : '$savedBabyName의 activity event가 생성되었습니다. 같은 아기로 바로 다음 기록을 입력할 수 있습니다.';
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              savedBabyName == null
+                  ? 'activity event가 생성되었습니다.'
+                  : '$savedBabyName 기록이 저장되었습니다.',
+            ),
+          ),
+        );
+      }
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -164,6 +182,36 @@ class _ActivityCreatePageState extends State<ActivityCreatePage> {
     _stoolColorController.dispose();
     _stoolTextureController.dispose();
     super.dispose();
+  }
+
+  void _resetFormPreservingBaby() {
+    final preservedBabyId = _selectedBabyId;
+    final now = DateTime.now();
+
+    _formKey.currentState?.reset();
+    _selectedBabyId = preservedBabyId;
+    _selectedEventType = 'bottle_feeding';
+    _selectedBottleAmountUnit = 'ml';
+    _selectedBottleContentType = 'formula';
+    _selectedBreastSide = 'both';
+    _selectedSleepType = 'nap';
+    _selectedDiaperType = 'wet';
+    _selectedRashObserved = false;
+    _selectedRecordedAt = now;
+    _recordedAtController.text =
+        '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')} '
+        '${now.hour.toString().padLeft(2, '0')}:'
+        '${now.minute.toString().padLeft(2, '0')}';
+    _noteController.clear();
+    _bottleAmountController.clear();
+    _breastfeedingDurationController.clear();
+    _sleepDurationController.clear();
+    _sleepLocationController.clear();
+    _stoolColorController.clear();
+    _stoolTextureController.clear();
+    _selectedRashObserved = false;
   }
 
   @override

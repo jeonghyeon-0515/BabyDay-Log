@@ -81,6 +81,10 @@ class _ActivityStatusCardState extends State<ActivityStatusCard> {
             ),
             _ActivityRow(label: '최신 상태', value: latestEvent?.status ?? '없음'),
             _ActivityRow(
+              label: '핵심 상세',
+              value: latestEvent?.displayDetailSummary ?? '없음',
+            ),
+            _ActivityRow(
               label: '기록 시각',
               value: latestEvent?.recordedAt ?? '없음',
             ),

@@ -87,6 +87,10 @@ class _RecordsPageState extends State<RecordsPage> {
     final theme = Theme.of(context);
     final canUseRecords = widget.bootstrapState.supabaseInitialized;
     final repository = _repository;
+    final todayEventCount = _countTodayEvents();
+    final latestFeeding = _latestEventWhere((event) => event.isFeeding);
+    final latestSleep = _latestEventWhere((event) => event.isSleep);
+    final latestDiaper = _latestEventWhere((event) => event.isDiaper);
 
     return Scaffold(
       appBar: AppBar(title: const Text('기록')),
@@ -106,6 +110,29 @@ class _RecordsPageState extends State<RecordsPage> {
               selectedBaby: widget.selectedBaby,
               availableBabies: widget.availableBabies,
               onSelectBaby: widget.onSelectBaby,
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                _RecordsMetricCard(
+                  label: '오늘 기록 수',
+                  value: '$todayEventCount건',
+                ),
+                _RecordsMetricCard(
+                  label: '최근 수유',
+                  value: _summaryCardValue(latestFeeding),
+                ),
+                _RecordsMetricCard(
+                  label: '최근 수면',
+                  value: _summaryCardValue(latestSleep),
+                ),
+                _RecordsMetricCard(
+                  label: '최근 기저귀',
+                  value: _summaryCardValue(latestDiaper),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             Wrap(
@@ -163,6 +190,7 @@ class _RecordsPageState extends State<RecordsPage> {
               Card(
                 child: ListTile(
                   title: Text(event.eventTypeLabel),
+                  isThreeLine: true,
                   subtitle: Text(_eventSubtitle(event)),
                 ),
               ),
@@ -176,14 +204,80 @@ class _RecordsPageState extends State<RecordsPage> {
 
   String _eventSubtitle(ActivityEventSummary event) {
     final buffer = StringBuffer()
-      ..write('status: ${event.status}\n')
-      ..write('recordedAt: ${event.recordedAt}');
+      ..write('${event.displayDetailSummary}\n')
+      ..write('상태: ${event.status}\n')
+      ..write('기록 시각: ${event.recordedAt}');
 
     if (event.note != null && event.note!.trim().isNotEmpty) {
-      buffer.write('\nnote: ${event.note}');
+      buffer.write('\n메모: ${event.note}');
     }
 
-    buffer.write('\nbabyId: ${event.babyId}');
+    buffer.write('\n아기 ID: ${event.babyId}');
     return buffer.toString();
+  }
+
+  int _countTodayEvents() {
+    final now = DateTime.now().toLocal();
+    return _events
+        .where((event) => _isSameLocalDay(event.recordedAtDateTime, now))
+        .length;
+  }
+
+  ActivityEventSummary? _latestEventWhere(
+    bool Function(ActivityEventSummary) test,
+  ) {
+    for (final event in _events) {
+      if (test(event)) {
+        return event;
+      }
+    }
+    return null;
+  }
+
+  bool _isSameLocalDay(DateTime? eventTime, DateTime now) {
+    if (eventTime == null) return false;
+    return eventTime.year == now.year &&
+        eventTime.month == now.month &&
+        eventTime.day == now.day;
+  }
+
+  String _summaryCardValue(ActivityEventSummary? event) {
+    if (event == null) {
+      return '없음';
+    }
+
+    final recordedAt = event.recordedAtDateTime;
+    final recordedText = recordedAt == null
+        ? '시각 없음'
+        : '${recordedAt.month}/${recordedAt.day} ${recordedAt.hour.toString().padLeft(2, '0')}:${recordedAt.minute.toString().padLeft(2, '0')}';
+
+    return '${event.displayDetailSummary}\n$recordedText';
+  }
+}
+
+class _RecordsMetricCard extends StatelessWidget {
+  const _RecordsMetricCard({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 165,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label),
+              const SizedBox(height: 8),
+              Text(value, style: Theme.of(context).textTheme.titleMedium),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
