@@ -4,7 +4,7 @@ import 'package:babyday_log/core/config/app_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('bootstrap home renders environment and status', (tester) async {
+  testWidgets('home tab renders dashboard shell', (tester) async {
     const config = AppConfig(
       environment: 'test',
       supabaseUrl: '',
@@ -16,9 +16,10 @@ void main() {
 
     await tester.pumpWidget(const BabyDayLogApp(bootstrapState: state));
 
-    expect(find.text('BabyDay Log'), findsOneWidget);
-    expect(find.text('Flutter + Supabase Bootstrap'), findsOneWidget);
-    expect(find.text('dart-define 값 대기'), findsOneWidget);
-    expect(find.text('example'), findsOneWidget);
+    expect(find.text('홈'), findsWidgets);
+    expect(find.text('오늘 홈'), findsOneWidget);
+    expect(find.text('현재 아기'), findsOneWidget);
+    expect(find.text('Household 요약'), findsOneWidget);
+    expect(find.text('최근 기록'), findsOneWidget);
   });
 }
