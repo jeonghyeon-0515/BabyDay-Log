@@ -25,7 +25,7 @@ class _AppShellPageState extends State<AppShellPage> {
       HomeScreen(bootstrapState: widget.bootstrapState),
       RecordsPage(bootstrapState: widget.bootstrapState),
       AnalyticsPage(bootstrapState: widget.bootstrapState),
-      const DiaryPage(),
+      DiaryPage(bootstrapState: widget.bootstrapState),
       MorePage(bootstrapState: widget.bootstrapState),
     ];
 
