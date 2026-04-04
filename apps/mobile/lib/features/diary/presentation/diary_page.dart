@@ -5,6 +5,7 @@ import '../data/diary_repository.dart';
 import '../domain/diary_entry_summary.dart';
 import 'diary_create_page.dart';
 import 'diary_list_page.dart';
+import 'public_diary_feed_page.dart';
 
 class DiaryPage extends StatefulWidget {
   const DiaryPage({super.key, required this.bootstrapState});
@@ -18,6 +19,7 @@ class DiaryPage extends StatefulWidget {
 class _DiaryPageState extends State<DiaryPage> {
   DiaryRepository? _repository;
   List<DiaryEntrySummary> _entries = const [];
+  List<DiaryEntrySummary> _publicEntries = const [];
   String? _message;
   bool _isLoading = false;
 
@@ -40,10 +42,16 @@ class _DiaryPageState extends State<DiaryPage> {
     });
 
     try {
-      final entries = await repository.fetchRecentDiaries(limit: 20);
+      final results = await Future.wait<List<DiaryEntrySummary>>([
+        repository.fetchRecentDiaries(limit: 20),
+        repository.fetchPublicDiaries(limit: 20),
+      ]);
+      final entries = results[0];
+      final publicEntries = results[1];
       if (!mounted) return;
       setState(() {
         _entries = entries;
+        _publicEntries = publicEntries;
         _message = entries.isEmpty ? '작성된 일기가 없습니다.' : null;
       });
     } catch (error) {
@@ -65,9 +73,8 @@ class _DiaryPageState extends State<DiaryPage> {
     final theme = Theme.of(context);
     final canUseDiary = widget.bootstrapState.supabaseInitialized;
     final latest = _entries.isEmpty ? null : _entries.first;
-    final publicCount = _entries
-        .where((entry) => entry.visibility == 'public')
-        .length;
+    final latestPublic = _publicEntries.isEmpty ? null : _publicEntries.first;
+    final publicCount = _publicEntries.length;
 
     return Scaffold(
       appBar: AppBar(title: const Text('일기')),
@@ -81,6 +88,26 @@ class _DiaryPageState extends State<DiaryPage> {
             Text(
               '비공개/공개 성장일기의 첫 단계를 연결했습니다.',
               style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('공개 일기 하이라이트', style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 12),
+                    Text(latestPublic?.title ?? '(제목 없음)'),
+                    const SizedBox(height: 8),
+                    Text(
+                      latestPublic?.body ?? '표시할 공개 일기가 없습니다.',
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             Wrap(
@@ -125,6 +152,17 @@ class _DiaryPageState extends State<DiaryPage> {
                         )
                       : null,
                   child: const Text('전체 보기'),
+                ),
+                OutlinedButton(
+                  onPressed: canUseDiary && _repository != null
+                      ? () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                PublicDiaryFeedPage(repository: _repository!),
+                          ),
+                        )
+                      : null,
+                  child: const Text('공개 피드'),
                 ),
               ],
             ),
