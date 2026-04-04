@@ -28,6 +28,20 @@ class DiaryRepository {
     ).map(DiaryEntrySummary.fromJson).toList();
   }
 
+  Future<List<DiaryEntrySummary>> fetchPublicDiaries({int limit = 20}) async {
+    final diaries = await _client
+        .from('diary_entries')
+        .select('id, baby_id, visibility, body, title, event_date')
+        .eq('visibility', 'public')
+        .isFilter('deleted_at', null)
+        .order('created_at', ascending: false)
+        .limit(limit);
+
+    return List<Map<String, dynamic>>.from(
+      diaries,
+    ).map(DiaryEntrySummary.fromJson).toList();
+  }
+
   Future<List<DiaryCreateBabyOption>> fetchCreateBabyOptions() async {
     final user = currentUser;
     if (user == null) return const [];
