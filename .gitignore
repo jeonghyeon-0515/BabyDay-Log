@@ -9,6 +9,7 @@
 .buildlog/
 .history
 .omx/
+.tmp/
 .env
 .env.*
 !.env.example
