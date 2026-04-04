@@ -4,6 +4,8 @@ import '../../../bootstrap.dart';
 import '../../activity/presentation/activity_create_page.dart';
 import '../../activity/presentation/activity_list_page.dart';
 import '../../activity/data/activity_repository.dart';
+import '../../baby/domain/baby_summary.dart';
+import '../../baby/presentation/baby_context_header.dart';
 import '../../baby/presentation/baby_create_page.dart';
 import '../../baby/presentation/baby_list_page.dart';
 import '../../baby/data/baby_repository.dart';
@@ -18,9 +20,18 @@ import '../../profile/data/profile_repository.dart';
 import 'auth_manage_page.dart';
 
 class MorePage extends StatelessWidget {
-  const MorePage({super.key, required this.bootstrapState});
+  const MorePage({
+    super.key,
+    required this.bootstrapState,
+    required this.selectedBaby,
+    required this.availableBabies,
+    required this.onSelectBaby,
+  });
 
   final BootstrapState bootstrapState;
+  final BabySummary? selectedBaby;
+  final List<BabySummary> availableBabies;
+  final ValueChanged<String> onSelectBaby;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +56,12 @@ class MorePage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          BabyContextHeader(
+            selectedBaby: selectedBaby,
+            availableBabies: availableBabies,
+            onSelectBaby: onSelectBaby,
+          ),
+          const SizedBox(height: 12),
           _SectionCard(
             title: '계정',
             children: [

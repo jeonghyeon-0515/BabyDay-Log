@@ -88,7 +88,12 @@ class _AppShellPageState extends State<AppShellPage> {
         availableBabies: _availableBabies,
         onSelectBaby: _selectBaby,
       ),
-      MorePage(bootstrapState: widget.bootstrapState),
+      MorePage(
+        bootstrapState: widget.bootstrapState,
+        selectedBaby: selectedBaby,
+        availableBabies: _availableBabies,
+        onSelectBaby: _selectBaby,
+      ),
     ];
 
     return Scaffold(
