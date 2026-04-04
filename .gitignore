@@ -12,6 +12,8 @@
 .env
 .env.*
 !.env.example
+.dart-tool/
+.dartServer/
 config/env/*.json
 !config/env/*.example.json
 supabase/.env
